@@ -1,0 +1,21 @@
+# raw or derived clinical data must never be committed - MIMIC-IV DUA prohibits it
+data/
+*.csv
+*.csv.gz
+*.parquet
+*.jsonl
+
+# never commit credentials/env
+.env
+*.env
+
+# python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# os junk
+.DS_Store
+Thumbs.db
