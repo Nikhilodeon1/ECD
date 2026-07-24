@@ -72,6 +72,9 @@ def load_primary_diagnoses(diagnoses_icd_path: str, d_icd_path: str) -> pd.DataF
     titles = pd.read_csv(d_icd_path, compression="infer")
     primary = diag[diag["seq_num"] == 1]
     merged = primary.merge(titles, on=["icd_code", "icd_version"], how="left")
+    # a few hadm_ids have >1 row tied for seq_num==1 -- keep first so the
+    # index is unique and .get() below returns a scalar, not a Series
+    merged = merged.drop_duplicates(subset="hadm_id", keep="first")
     return merged.set_index("hadm_id")["long_title"]
 
 
