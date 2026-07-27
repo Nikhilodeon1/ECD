@@ -50,7 +50,12 @@ class AnthropicClient(LLMClient):
             max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
-        return resp.content[0].text
+        # content[0] isn't always the text block -- a ThinkingBlock can come
+        # first, so scan for the actual text block instead of assuming position
+        for block in resp.content:
+            if block.type == "text":
+                return block.text
+        raise RuntimeError(f"no text block in response: {resp.content}")
 
 
 class LlamaMedClient(LLMClient):
