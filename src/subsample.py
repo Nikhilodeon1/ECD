@@ -8,6 +8,12 @@ Caps how many times a single diagnosis can appear (--max-per-diagnosis) so
 the sample isn't dominated by the handful of extremely common ICU
 diagnoses (sepsis, pneumonia, UTI, etc. each appear 2,000-5,000+ times in
 the raw MIMIC data).
+
+Also enforces a target count PER SOURCE (default: even split across
+whatever sources are present) rather than sampling from the combined pool
+-- the MIMIC pool is ~1,400x bigger than MedQA's even after per-diagnosis
+capping, so naive combined-pool sampling all but erases MedQA from the
+result. Override with --source-n if you want a different split.
 """
 import argparse
 import json
@@ -16,28 +22,64 @@ from collections import defaultdict
 from pathlib import Path
 
 
+def _capped_pool(source_cases: list[dict], max_per_diagnosis: int, seed: int) -> list[dict]:
+    rng = random.Random(seed)
+    shuffled = source_cases[:]
+    rng.shuffle(shuffled)
+    per_dx_count = defaultdict(int)
+    capped = []
+    for c in shuffled:
+        dx = c["diagnosis_ground_truth"]
+        if per_dx_count[dx] >= max_per_diagnosis:
+            continue
+        per_dx_count[dx] += 1
+        capped.append(c)
+    return capped
+
+
 def stratified_sample(
-    cases: list[dict], n: int, max_per_diagnosis: int, seed: int
-) -> list[dict]:
-    random.seed(seed)
+    cases: list[dict],
+    n: int,
+    max_per_diagnosis: int,
+    seed: int,
+    target_per_source: dict[str, int] | None = None,
+) -> tuple[list[dict], dict[str, int]]:
     by_source = defaultdict(list)
     for c in cases:
         by_source[c["source"]].append(c)
+    sources = sorted(by_source.keys())
 
-    per_dx_count = defaultdict(int)
-    capped = []
-    for source_cases in by_source.values():
-        shuffled = source_cases[:]
-        random.shuffle(shuffled)
-        for c in shuffled:
-            dx = c["diagnosis_ground_truth"]
-            if per_dx_count[dx] >= max_per_diagnosis:
-                continue
-            per_dx_count[dx] += 1
-            capped.append(c)
+    if target_per_source is None:
+        base = n // len(sources)
+        target_per_source = {s: base for s in sources}
+        remainder = n - base * len(sources)
+        for s in sources[:remainder]:
+            target_per_source[s] += 1
 
-    random.shuffle(capped)
-    return capped[:n]
+    sample = []
+    actual_counts = {}
+    for s in sources:
+        capped = _capped_pool(by_source[s], max_per_diagnosis, seed)
+        take = min(target_per_source.get(s, 0), len(capped))
+        if take < target_per_source.get(s, 0):
+            print(
+                f"warning: wanted {target_per_source[s]} from '{s}' but only "
+                f"{len(capped)} available after per-diagnosis capping"
+            )
+        sample.extend(capped[:take])
+        actual_counts[s] = take
+
+    random.Random(seed).shuffle(sample)
+    return sample, actual_counts
+
+
+def parse_source_n(raw: str) -> dict[str, int]:
+    """Parses '--source-n medqa=150,mimic-iv-note=150' into a dict."""
+    out = {}
+    for pair in raw.split(","):
+        source, count = pair.split("=")
+        out[source.strip()] = int(count)
+    return out
 
 
 if __name__ == "__main__":
@@ -47,15 +89,20 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=300)
     parser.add_argument("--max-per-diagnosis", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--source-n",
+        default=None,
+        help="override the even split, e.g. 'medqa=150,mimic-iv-note=150'",
+    )
     args = parser.parse_args()
 
     with open(args.cases, encoding="utf-8") as f:
         cases = [json.loads(line) for line in f if line.strip()]
 
-    sample = stratified_sample(cases, args.n, args.max_per_diagnosis, args.seed)
-    by_source = defaultdict(int)
-    for c in sample:
-        by_source[c["source"]] += 1
+    target = parse_source_n(args.source_n) if args.source_n else None
+    sample, actual_counts = stratified_sample(
+        cases, args.n, args.max_per_diagnosis, args.seed, target
+    )
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -64,4 +111,4 @@ if __name__ == "__main__":
             f.write(json.dumps(c) + "\n")
 
     print(f"sampled {len(sample)} cases -> {out_path}")
-    print(f"by source: {dict(by_source)}")
+    print(f"by source: {actual_counts}")
