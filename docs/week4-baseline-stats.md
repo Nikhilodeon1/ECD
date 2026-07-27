@@ -18,18 +18,23 @@ unique diagnoses:    229 (out of 236 cases - most diagnoses only appear once)
 ```
 MedQA train split (~10k questions) hasn't been pulled yet - filtering that in too would give a much bigger pool if 236 test cases turns out to be too few once adversarial notes are added on top in Week 6.
 
-## MIMIC portion - not run yet
-This needs to run on the pod where the network volume is mounted:
+## MIMIC portion - run complete, real numbers
+Ran on the pod against real MIMIC-IV-Note + MIMIC-IV hosp tables:
 ```
-python build_dataset.py --medqa-split test \
-  --discharge /path/to/discharge.csv.gz \
-  --diagnoses-icd /path/to/diagnoses_icd.csv.gz \
-  --d-icd /path/to/d_icd_diagnoses.csv.gz
-python stats.py
+total_cases:       331,840  (236 medqa + 331,604 mimic-iv-note)
+skipped:           189 notes with no matched primary diagnosis (dropped)
+unique_diagnoses:  11,387
+note length (words): min 0, max 4,265, mean 406.1, median 352.0
 ```
-Once that runs, drop the real MIMIC numbers into this doc alongside the MedQA ones above. The output `cases.jsonl` itself stays on the pod / in `data/` locally - never gets committed.
+Top diagnoses are dominated by common inpatient conditions - sepsis, pneumonia, UTI, coronary disease, acute kidney failure, chemo encounters - which tracks with what a general hospital population should look like.
+
+This means dataset size is no longer a constraint at all - 331k+ raw cases is far more than needed even for a much bigger benchmark than originally planned. The real work from here is picking a well-chosen, high-quality subset, not finding more data.
+
+**Known issue found in this run:** `min: 0` words means some notes produced empty evidence text - the section-header regex is missing headers on at least some real notes (exactly the risk flagged before this ran). Need to quantify how common this is before trusting the data at scale - checking now.
 
 ## Known rough edges to fix before Week 5
 - One MedQA answer text had a stray `\n"` artifact in it (`"Benzodiazepine intoxication\n\""`) - raw HF dataset text isn't fully clean, worth a quick pass to strip stray whitespace/quote characters.
-- The MIMIC section-header regex has only been checked against synthetic text, not real notes - spot-check it against a handful of real discharge summaries on the pod before trusting it at scale.
+- Section-header regex misses some real notes (see above) - need to quantify and likely fix before this data is trustworthy at scale.
+- 189 MIMIC notes dropped for no matched primary diagnosis - small relative to 331k, but worth spot-checking a few to make sure it's a real absence and not a join bug.
 - Severity/category fields aren't in this dataset yet - that's Week 6.
+- Need to decide how to subsample down from 331k+331k to whatever final benchmark size makes sense - random sample, stratified by diagnosis frequency, or something else.

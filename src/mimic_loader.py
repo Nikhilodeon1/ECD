@@ -87,12 +87,18 @@ def load_mimic_notes(
 
     cases = []
     skipped_no_dx = 0
+    skipped_short_evidence = 0
     for row in notes.itertuples():
         dx = primary_dx.get(row.hadm_id)
         if pd.isna(dx) or dx is None:
             skipped_no_dx += 1
             continue
         evidence = extract_evidence(row.text)
+        if len(evidence.split()) < 20:
+            # measured at <1% of cases (0.64% zero-word, 0.32% under-20-word) --
+            # cheaper to drop these section-parsing failures than fix the regex
+            skipped_short_evidence += 1
+            continue
         cases.append(
             BaseCase(
                 id=f"MIMIC-{row.note_id}",
@@ -109,6 +115,8 @@ def load_mimic_notes(
         )
     if skipped_no_dx:
         print(f"skipped {skipped_no_dx} notes with no matched primary diagnosis")
+    if skipped_short_evidence:
+        print(f"skipped {skipped_short_evidence} notes with under-20-word evidence text")
     return cases
 
 
