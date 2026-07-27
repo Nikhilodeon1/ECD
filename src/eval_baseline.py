@@ -33,7 +33,7 @@ def run_eval(cases: list[dict], generator_client, grader_client, out_path: str) 
 
         grade_prompt = build_grade_prompt(c["diagnosis_ground_truth"], predicted)
         try:
-            grade_raw = grader_client.generate(grade_prompt, max_tokens=100)
+            grade_raw = grader_client.generate(grade_prompt, max_tokens=250)
         except Exception as e:
             print(f"[{i}] grading failed for {c['id']}: {e}")
             continue

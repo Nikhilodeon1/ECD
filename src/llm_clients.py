@@ -44,14 +44,20 @@ class AnthropicClient(LLMClient):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
 
-    def generate(self, prompt: str, max_tokens: int = 300) -> str:
+    def generate(self, prompt: str, max_tokens: int = 500) -> str:
         resp = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
+            # the actual bug: without this, the model sometimes spends the
+            # whole max_tokens budget on an unrequested thinking block and
+            # never gets to emit any text at all (~4.7% of calls in a real
+            # run) -- not just a block-ordering issue, there was no text
+            # block present at all. Disabling thinking removes the failure
+            # mode outright; the higher default max_tokens is a cheap
+            # safety net on top (billed on actual tokens used, not the cap).
+            thinking={"type": "disabled"},
             messages=[{"role": "user", "content": prompt}],
         )
-        # content[0] isn't always the text block -- a ThinkingBlock can come
-        # first, so scan for the actual text block instead of assuming position
         for block in resp.content:
             if block.type == "text":
                 return block.text
