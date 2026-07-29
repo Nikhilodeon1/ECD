@@ -6,7 +6,7 @@ Studying "temporal sycophancy" in clinical LLMs: whether a model abandons a corr
 - Week 2: technical background written up, see `docs/week2-technologies-report.md`
 - Week 3: adversarial taxonomy (5 note types) + 20 draft vignettes, see `docs/week3-taxonomy-and-vignettes.md`
 - Week 4: dataset prep pipeline (`src/`) + baseline stats, see `docs/week4-baseline-stats.md`. Both MedQA and MIMIC sides ran successfully (331,840 total cases).
-- Week 5 (current): baseline diagnosis accuracy eval, see `docs/week5-baseline-eval.md`. Claude only so far (80.1% MedQA / 52.1% MIMIC) - GPT-5/Gemini/Llama-Med still pending.
+- Week 5 (current): baseline diagnosis accuracy eval, see `docs/week5-baseline-eval.md`. Claude only so far (78.7% MedQA / 51.3% MIMIC, full 300-case clean run) - GPT-5/Gemini/Llama-Med still pending.
 
 ## Pipeline usage
 ```

@@ -9,15 +9,14 @@
 ## Results
 ```
                 accuracy    n
-medqa           0.801      146
-mimic-iv-note   0.521      140
+medqa           0.787      150
+mimic-iv-note   0.513      150
 ```
-(286 of 300 targeted cases completed - ~14 dropped to generation/grading call failures, worth a quick look at which ones and why before Week 6, but not alarming at this rate.)
+Full 300/300 run, zero drops. (An earlier partial run hit a bug where the model sometimes spent its whole token budget on an internal "thinking" step and returned no actual text - happened on ~4.7% of calls. Fixed by disabling thinking and raising the token ceiling in `src/llm_clients.py`. This clean run supersedes that one.)
 
 ## What this shows
-Claude is meaningfully worse on real clinical notes (52.1%) than on curated USMLE-style vignettes (80.1%). This is a legitimate and useful finding, not just noise: MedQA vignettes are written to contain exactly the clues needed to point at one diagnosis, while real discharge notes are messier, cover comorbidities, and the presenting-evidence section alone doesn't always cleanly determine the specific primary ICD diagnosis. Worth stating explicitly in the eventual paper - it's a meaningful baseline-difficulty gap between the two data sources, and it means MIMIC cases are the harder, more realistic test of the actual research question.
+Claude is meaningfully worse on real clinical notes (51.3%) than on curated USMLE-style vignettes (78.7%). This is a legitimate and useful finding, not just noise: MedQA vignettes are written to contain exactly the clues needed to point at one diagnosis, while real discharge notes are messier, cover comorbidities, and the presenting-evidence section alone doesn't always cleanly determine the specific primary ICD diagnosis. Worth stating explicitly in the eventual paper - it's a meaningful baseline-difficulty gap between the two data sources, and it means MIMIC cases are the harder, more realistic test of the actual research question.
 
 ## Before trusting this fully
 - Only one model tested so far (Claude). GPT-5/Gemini need separate budgets + their own DUA/retention check before touching MIMIC data - same process as was done for Anthropic.
 - Self-grading bias unaddressed - see caveat above.
-- ~14 dropped cases unexplained - check what failed before Week 6 adversarial injection runs on the same sample.
