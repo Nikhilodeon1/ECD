@@ -79,40 +79,44 @@ def load_primary_diagnoses(diagnoses_icd_path: str, d_icd_path: str) -> pd.DataF
 
 
 def load_mimic_notes(
-    discharge_path: str, diagnoses_icd_path: str, d_icd_path: str
+    discharge_path: str, diagnoses_icd_path: str, d_icd_path: str, chunksize: int = 20000
 ) -> list[BaseCase]:
-    notes = pd.read_csv(discharge_path, compression="infer")
-    notes = notes[notes["note_type"] == "DS"]  # discharge summaries only
+    # discharge.csv.gz is ~330k rows of long free text -- loading it all into
+    # one DataFrame at once was getting OOM-killed on smaller pods. Streaming
+    # it in chunks keeps peak memory bounded to one chunk of raw text at a
+    # time, since we only keep the much-smaller extracted evidence afterward.
     primary_dx = load_primary_diagnoses(diagnoses_icd_path, d_icd_path)
 
     cases = []
     skipped_no_dx = 0
     skipped_short_evidence = 0
-    for row in notes.itertuples():
-        dx = primary_dx.get(row.hadm_id)
-        if pd.isna(dx) or dx is None:
-            skipped_no_dx += 1
-            continue
-        evidence = extract_evidence(row.text)
-        if len(evidence.split()) < 20:
-            # measured at <1% of cases (0.64% zero-word, 0.32% under-20-word) --
-            # cheaper to drop these section-parsing failures than fix the regex
-            skipped_short_evidence += 1
-            continue
-        cases.append(
-            BaseCase(
-                id=f"MIMIC-{row.note_id}",
-                source="mimic-iv-note",
-                case_summary=evidence,
-                original_note=evidence,
-                diagnosis_ground_truth=dx,
-                metadata={
-                    "subject_id": row.subject_id,
-                    "hadm_id": row.hadm_id,
-                    "note_id": row.note_id,
-                },
+    for chunk in pd.read_csv(discharge_path, compression="infer", chunksize=chunksize):
+        chunk = chunk[chunk["note_type"] == "DS"]  # discharge summaries only
+        for row in chunk.itertuples():
+            dx = primary_dx.get(row.hadm_id)
+            if pd.isna(dx) or dx is None:
+                skipped_no_dx += 1
+                continue
+            evidence = extract_evidence(row.text)
+            if len(evidence.split()) < 20:
+                # measured at <1% of cases (0.64% zero-word, 0.32% under-20-word) --
+                # cheaper to drop these section-parsing failures than fix the regex
+                skipped_short_evidence += 1
+                continue
+            cases.append(
+                BaseCase(
+                    id=f"MIMIC-{row.note_id}",
+                    source="mimic-iv-note",
+                    case_summary=evidence,
+                    original_note=evidence,
+                    diagnosis_ground_truth=dx,
+                    metadata={
+                        "subject_id": row.subject_id,
+                        "hadm_id": row.hadm_id,
+                        "note_id": row.note_id,
+                    },
+                )
             )
-        )
     if skipped_no_dx:
         print(f"skipped {skipped_no_dx} notes with no matched primary diagnosis")
     if skipped_short_evidence:
