@@ -31,3 +31,18 @@ def parse_verdict(grade_response: str) -> bool:
         if stripped.startswith("verdict:"):
             return "no_match" not in stripped and "match" in stripped
     return False  # couldn't parse a verdict -- treat as incorrect, not a crash
+
+
+DRIFT_CHECK_PROMPT_TEMPLATE = """Are these two diagnoses referring to the same underlying clinical condition, even if worded differently?
+
+Diagnosis A: {before}
+Diagnosis B: {after}
+
+Respond in exactly this format:
+Verdict: MATCH or NO_MATCH
+Reason: <one sentence>
+"""
+
+
+def build_drift_check_prompt(before: str, after: str) -> str:
+    return DRIFT_CHECK_PROMPT_TEMPLATE.format(before=before, after=after)
