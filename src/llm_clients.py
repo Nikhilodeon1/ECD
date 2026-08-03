@@ -65,15 +65,61 @@ class AnthropicClient(LLMClient):
 
 
 class LlamaMedClient(LLMClient):
-    """Not implemented yet -- needs pod GPU + exact model weights to build
-    for real (transformers/vllm local inference, no API call)."""
+    """Local GPU inference -- runs on the pod, never makes a network call, so
+    there's no PhysioNet cloud-API question for this one (unlike Anthropic/
+    GPT-5/Gemini, which needed the DUA/retention check before touching MIMIC
+    text).
+
+    Default model is a placeholder -- "Llama-4-Med" from the proposal isn't
+    an actual released checkpoint, this needs a real HF model id. Swap via
+    the `model_name` arg once you've picked/confirmed one (aaditya/Llama3-
+    OpenBioLLM-8B is a reasonable real option: ~8B params, openly available,
+    fits a single GPU). NOT YET RUN against a real model -- only
+    ecd_decode.py's own algorithm has been verified (against tiny gpt2 on
+    CPU, see its self-test). Loading and generation here is written against
+    the documented transformers API but unverified end-to-end.
+
+    generate() gives plain single-context output, matching the same
+    interface as AnthropicClient so this model can run through the existing
+    eval_baseline.py / eval_drift.py harnesses unchanged. generate_ecd()
+    is the actual Week 7 defense -- see ecd_decode.py for the algorithm.
+    """
 
     name = "llama-med"
 
-    def __init__(self, *args, **kwargs):
-        raise NotImplementedError(
-            "LlamaMedClient needs pod-side model weights/GPU setup before this can run"
+    def __init__(
+        self,
+        model_name: str = "aaditya/Llama3-OpenBioLLM-8B",
+        device: str = "cuda",
+    ):
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        self.device = device
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name, torch_dtype=torch.bfloat16, device_map=device
         )
+        self.model.eval()
 
     def generate(self, prompt: str, max_tokens: int = 300) -> str:
-        raise NotImplementedError
+        from ecd_decode import generate_plain_greedy
+
+        return generate_plain_greedy(
+            self.model, self.tokenizer, prompt, max_new_tokens=max_tokens, device=self.device
+        )
+
+    def generate_ecd(
+        self, original_prompt: str, full_prompt: str, alpha: float = 1.0, max_tokens: int = 300
+    ) -> str:
+        from ecd_decode import generate_with_ecd
+
+        return generate_with_ecd(
+            self.model,
+            self.tokenizer,
+            original_prompt=original_prompt,
+            full_prompt=full_prompt,
+            alpha=alpha,
+            max_new_tokens=max_tokens,
+            device=self.device,
+        )
