@@ -7,7 +7,8 @@ Studying "temporal sycophancy" in clinical LLMs: whether a model abandons a corr
 - Week 3: adversarial taxonomy (5 note types) + 20 draft vignettes, see `docs/week3-taxonomy-and-vignettes.md`
 - Week 4: dataset prep pipeline (`src/`) + baseline stats, see `docs/week4-baseline-stats.md`. Both MedQA and MIMIC sides ran successfully (331,840 total cases).
 - Week 5: baseline diagnosis accuracy eval, see `docs/week5-baseline-eval.md`. Claude only so far (78.7% MedQA / 51.3% MIMIC, full 300-case clean run) - GPT-5/Gemini/Llama-Med still pending.
-- Week 6 (current): adversarial injection across all 5 taxonomy categories, see `docs/week6-drift-results.md` and `notebooks/week6-drift-analysis.ipynb`. Overall Diagnosis Drift Rate: **27.0%** (n=960) - real MIMIC cases drift ~3x more (44.0%) than MedQA cases (16.1%).
+- Week 6: adversarial injection across all 5 taxonomy categories, see `docs/week6-drift-results.md` and `notebooks/week6-drift-analysis.ipynb`. Overall Diagnosis Drift Rate: **27.0%** (n=960) - real MIMIC cases drift ~3x more (44.0%) than MedQA cases (16.1%).
+- Week 7 (current): ECD implementation (`src/ecd_decode.py`, `src/ecd_demo.py`), see `docs/week7-ecd-results.md`. Verified correct (α=0 matches plain decoding exactly) and shown working on a real GPU run - recovered a correct pre-drift diagnosis at α=1 on one case. Two real limitations found: α=2 degenerates into incoherent output, and the open model tested doesn't reliably follow the structured output format Claude does.
 
 ## Pipeline usage
 ```

@@ -65,11 +65,15 @@ if __name__ == "__main__":
         original_prompt = build_baseline_prompt(c["original_note"])
         full_prompt = build_followup_prompt(c["original_note"], c["adversarial_note"])
 
-        plain = parse_diagnosis(client.generate(full_prompt, max_tokens=100))
+        # 100 was cutting real responses off mid-sentence in practice --
+        # this base model is also less reliable than Claude at sticking to
+        # the "Diagnosis: X" format, so parse_diagnosis often falls back to
+        # the raw text; more headroom at least avoids truncating that too
+        plain = parse_diagnosis(client.generate(full_prompt, max_tokens=200))
         print(f"Llama-Med plain (alpha=0, no defense): {plain}")
 
         for alpha in alphas:
             ecd_out = parse_diagnosis(
-                client.generate_ecd(original_prompt, full_prompt, alpha=alpha, max_tokens=100)
+                client.generate_ecd(original_prompt, full_prompt, alpha=alpha, max_tokens=200)
             )
             print(f"Llama-Med ECD alpha={alpha}: {ecd_out}")
