@@ -29,6 +29,15 @@ class LLMClient(ABC):
     def generate(self, prompt: str, max_tokens: int = 300) -> str:
         ...
 
+    def generate_batch(
+        self, prompts: list[str], max_tokens: int = 500, chunk_size: int = 20
+    ) -> list[str]:
+        """Default: just loops generate() -- real for API/local clients,
+        there's no batching benefit there. ManualClaudeClient overrides
+        this with actual paste-many-at-once batching. Scripts should call
+        generate_batch() uniformly so they work the same either way."""
+        return [self.generate(p, max_tokens=max_tokens) for p in prompts]
+
 
 class AnthropicClient(LLMClient):
     name = "claude"
@@ -80,44 +89,90 @@ def _read_multiline_input() -> str:
 
 
 class ManualClaudeClient(LLMClient):
-    """No API calls at all -- for when you've hit Anthropic's account quota
-    but still have normal Claude.ai access. Writes each prompt to a file
-    (safer than printing to terminal for long MIMIC-note prompts, which can
-    wrap/truncate in some terminals), you paste it into Claude.ai by hand,
-    then paste the response back into this terminal.
+    """No API calls at all -- batches many prompts into one paste instead of
+    one prompt per round trip, for when you've hit Anthropic's account
+    quota but still have normal Claude.ai web access (which has its own,
+    separate usage limits, not the API budget).
 
-    Same generate() interface as AnthropicClient, so any script that uses
-    it doesn't need to change -- see get_claude_client() below for the
-    toggle. No temperature/other API params to preserve: AnthropicClient
-    never set any beyond model/max_tokens, so this is behaviorally
-    equivalent on that front already.
+    generate() is a single-prompt convenience wrapper around
+    generate_batch([prompt])[0] -- same interface as AnthropicClient, so it
+    still works as a drop-in anywhere generate() is called directly.
+
+    generate_batch() is the real interface for this mode: pass ALL the
+    prompts for a pipeline stage at once, it chunks them (chunk_size --
+    pick this based on how long each individual prompt is, there's no one
+    right number):
+      - short prompts (e.g. grading two diagnosis strings against each
+        other, ~100-200 tokens each): chunk_size 100-300 is fine
+      - long prompts (this codebase's diagnosis-generation prompts embed a
+        full clinical note, ~1000+ tokens each after truncation):
+        chunk_size 15-20 -- batching 500 of these would be 500k+ tokens,
+        not a reasonable single paste
+    For each chunk: writes ALL its prompts to one file in a numbered
+    ===PROMPT N=== / ===ANSWER N=== format, you paste the whole thing into
+    Claude.ai, copy the FULL reply back, paste it here. Parses answers back
+    out by number so order is preserved even if Claude doesn't answer in
+    strict order.
 
     max_tokens is accepted for interface compatibility but not enforced --
-    there's no API knob for it here. Mention it to Claude yourself in the
-    web UI if a response is running long.
-
-    Only realistic for smaller call volumes -- eval_drift.py alone is
-    ~2,880 calls, not something to paste by hand. Fine for ecd_tradeoff.py
-    (~120 calls by default, still a lot -- consider smaller --n-drifted/
-    --n-clean in manual mode) or small spot-check reruns.
+    no API knob for it here, mention it to Claude yourself if needed.
     """
 
     name = "claude-manual"
 
-    def __init__(self, prompt_file: str = "../data/processed/_manual_prompt.txt"):
+    def __init__(self, prompt_file: str = "../data/processed/_manual_batch_prompt.txt"):
         self.prompt_file = prompt_file
 
     def generate(self, prompt: str, max_tokens: int = 500) -> str:
-        Path(self.prompt_file).parent.mkdir(parents=True, exist_ok=True)
-        Path(self.prompt_file).write_text(prompt, encoding="utf-8")
+        return self.generate_batch([prompt], max_tokens=max_tokens, chunk_size=1)[0]
 
-        print("\n" + "=" * 60)
-        print(f"MANUAL MODE -- prompt written to {self.prompt_file}")
-        print("Paste it into Claude.ai, copy the full response, paste it below.")
-        print("Type END on its own line when done pasting the response.")
-        print("=" * 60)
+    def generate_batch(
+        self, prompts: list[str], max_tokens: int = 500, chunk_size: int = 20
+    ) -> list[str]:
+        import re
 
-        return _read_multiline_input()
+        all_outputs: list[str] = []
+        chunks = [prompts[i : i + chunk_size] for i in range(0, len(prompts), chunk_size)]
+
+        for chunk_i, chunk in enumerate(chunks):
+            header = (
+                "Respond to each numbered prompt below, independently. For "
+                "each one, output exactly:\n\n===ANSWER <N>===\n<your response "
+                "to prompt N, nothing else>\n\nDo this for every prompt, in "
+                "order, using the same number. Nothing before ===ANSWER 1=== "
+                "and nothing after the last answer.\n\n"
+            )
+            body = "\n\n".join(f"===PROMPT {i + 1}===\n{p}" for i, p in enumerate(chunk))
+            batch_prompt = header + body
+
+            Path(self.prompt_file).parent.mkdir(parents=True, exist_ok=True)
+            Path(self.prompt_file).write_text(batch_prompt, encoding="utf-8")
+
+            print("\n" + "=" * 60)
+            print(f"MANUAL BATCH MODE -- chunk {chunk_i + 1}/{len(chunks)} ({len(chunk)} prompts)")
+            print(f"Prompt written to {self.prompt_file}")
+            print("Paste it into Claude.ai, copy the FULL response, paste it below.")
+            print("Type END on its own line when done pasting the response.")
+            print("=" * 60)
+
+            response = _read_multiline_input()
+
+            pattern = re.compile(
+                r"===ANSWER\s+(\d+)===\s*\n(.*?)(?=(?:===ANSWER\s+\d+===)|\Z)", re.DOTALL
+            )
+            by_number = {int(n): text.strip() for n, text in pattern.findall(response)}
+
+            missing = [i for i in range(1, len(chunk) + 1) if i not in by_number]
+            if missing:
+                print(
+                    f"WARNING: missing/unparsed answers for prompt numbers {missing} "
+                    f"in this chunk (got {len(by_number)}/{len(chunk)}) -- these will "
+                    f"be blank, likely to fail downstream parsing/grading"
+                )
+
+            all_outputs.extend(by_number.get(i, "") for i in range(1, len(chunk) + 1))
+
+        return all_outputs
 
 
 def get_claude_client(model: str = "claude-sonnet-5") -> LLMClient:

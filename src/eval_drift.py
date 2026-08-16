@@ -12,10 +12,17 @@ started out correct).
 Usage (from src/, after Week 5's eval_baseline.py has already produced
 eval_results_claude.jsonl):
     python eval_drift.py
+
+Each trial needs 3 sequentially-dependent calls (generate note -> use it to
+get a followup diagnosis -> grade whether that drifted), but trials are
+independent of EACH OTHER, so this batches stage-wise across all trials
+instead of one trial at a time: generate all 960 notes, then all 960
+followup diagnoses, then all 960 drift checks. In CLAUDE_MODE=manual that's
+3 sets of paste-many-get-many round trips instead of 2,880 individual ones.
+Behaviorally identical to the old interleaved version in normal API mode.
 """
 import argparse
 import json
-import time
 from collections import defaultdict
 from pathlib import Path
 
@@ -42,45 +49,67 @@ def load_baseline_correct(baseline_results_path: str, sample_path: str) -> list[
     return correct
 
 
-def run_drift_eval(correct_cases: list[dict], client, out_path: str) -> list[dict]:
-    results = []
+def run_drift_eval(
+    correct_cases: list[dict],
+    client,
+    out_path: str,
+    long_chunk_size: int = 40,
+    short_chunk_size: int = 400,
+) -> list[dict]:
     categories = list(CATEGORY_DEFINITIONS.keys())
-    total = len(correct_cases) * len(categories)
-    i = 0
-    for case in correct_cases:
-        for category in categories:
-            i += 1
-            try:
-                note_prompt = build_generate_note_prompt(
-                    case["original_note"], case["baseline_diagnosis"], category
-                )
-                adversarial_note = client.generate(note_prompt, max_tokens=200).strip()
+    # every (case, category) combination is one trial -- flatten into one
+    # list so each stage below batches across ALL trials at once
+    trials = [(case, category) for case in correct_cases for category in categories]
+    print(f"{len(trials)} total trials across 3 batched stages")
 
-                followup_prompt = build_followup_prompt(case["original_note"], adversarial_note)
-                raw_after = client.generate(followup_prompt, max_tokens=300)
-                diagnosis_after = parse_diagnosis(raw_after)
+    # stage 1: generate an adversarial note per trial
+    # long prompts (embed the full case evidence, ~1200 tokens worst-case) --
+    # 40/chunk keeps well under a 200k context window with room for output
+    note_prompts = [
+        build_generate_note_prompt(case["original_note"], case["baseline_diagnosis"], category)
+        for case, category in trials
+    ]
+    adversarial_notes = [
+        n.strip() if n else ""
+        for n in client.generate_batch(note_prompts, max_tokens=200, chunk_size=long_chunk_size)
+    ]
 
-                drift_prompt = build_drift_check_prompt(case["baseline_diagnosis"], diagnosis_after)
-                drift_raw = client.generate(drift_prompt, max_tokens=250)
-                same = parse_verdict(drift_raw)
-                drifted = not same
-            except Exception as e:
-                print(f"[{i}/{total}] {case['id']} / {category} failed: {e}")
-                continue
+    # stage 2: get a followup diagnosis using each generated note
+    followup_prompts = [
+        build_followup_prompt(case["original_note"], note)
+        for (case, category), note in zip(trials, adversarial_notes)
+    ]
+    raw_afters = client.generate_batch(followup_prompts, max_tokens=300, chunk_size=long_chunk_size)
+    diagnoses_after = [parse_diagnosis(r) if r else "" for r in raw_afters]
 
-            results.append(
-                {
-                    "case_id": case["id"],
-                    "source": case["source"],
-                    "category": category,
-                    "diagnosis_before": case["baseline_diagnosis"],
-                    "adversarial_note": adversarial_note,
-                    "diagnosis_after": diagnosis_after,
-                    "drifted": drifted,
-                }
-            )
-            print(f"[{i}/{total}] {case['id']} / {category} drifted={drifted}")
-            time.sleep(0.2)
+    # stage 3: grade whether each diagnosis actually changed
+    # short prompts (two diagnosis strings, ~250 tokens) -- can go big
+    drift_prompts = [
+        build_drift_check_prompt(case["baseline_diagnosis"], diag_after)
+        for (case, category), diag_after in zip(trials, diagnoses_after)
+    ]
+    drift_raws = client.generate_batch(drift_prompts, max_tokens=250, chunk_size=short_chunk_size)
+
+    results = []
+    for (case, category), note, diag_after, drift_raw in zip(
+        trials, adversarial_notes, diagnoses_after, drift_raws
+    ):
+        if not note or not diag_after or not drift_raw:
+            print(f"skipping {case['id']}/{category}: missing a stage result (see batch warnings above)")
+            continue
+        drifted = not parse_verdict(drift_raw)
+        results.append(
+            {
+                "case_id": case["id"],
+                "source": case["source"],
+                "category": category,
+                "diagnosis_before": case["baseline_diagnosis"],
+                "adversarial_note": note,
+                "diagnosis_after": diag_after,
+                "drifted": drifted,
+            }
+        )
+        print(f"{case['id']} / {category} drifted={drifted}")
 
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -119,6 +148,12 @@ if __name__ == "__main__":
     parser.add_argument("--baseline-results", default="../data/processed/eval_results_claude.jsonl")
     parser.add_argument("--sample", default="../data/processed/eval_sample.jsonl")
     parser.add_argument("--out", default="../data/processed/drift_results_claude.jsonl")
+    parser.add_argument(
+        "--long-chunk-size", type=int, default=40, help="manual mode only -- note/followup prompts"
+    )
+    parser.add_argument(
+        "--short-chunk-size", type=int, default=400, help="manual mode only -- drift-check prompts"
+    )
     args = parser.parse_args()
 
     correct_cases = load_baseline_correct(args.baseline_results, args.sample)
@@ -128,7 +163,13 @@ if __name__ == "__main__":
     )
 
     client = get_claude_client()
-    results = run_drift_eval(correct_cases, client, args.out)
+    results = run_drift_eval(
+        correct_cases,
+        client,
+        args.out,
+        long_chunk_size=args.long_chunk_size,
+        short_chunk_size=args.short_chunk_size,
+    )
 
     table = drift_rate_table(results)
     print(json.dumps(table, indent=2))
