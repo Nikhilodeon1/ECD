@@ -29,7 +29,12 @@ from llm_clients import AnthropicClient, LlamaMedClient
 from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
 
 
-def load_drifted_cases(drift_results_path: str, sample_path: str, n: int) -> list[dict]:
+def load_drifted_cases(
+    drift_results_path: str, sample_path: str, n: int, source: str | None = None
+) -> list[dict]:
+    """source: filter to 'medqa' (fully public, safe on any cluster) or
+    'mimic-iv-note' (real PhysioNet-restricted evidence text, only run this
+    where that's cleared). None = no filter, mixes both."""
     with open(drift_results_path, encoding="utf-8") as f:
         results = [json.loads(line) for line in f if line.strip()]
     with open(sample_path, encoding="utf-8") as f:
@@ -42,15 +47,19 @@ def load_drifted_cases(drift_results_path: str, sample_path: str, n: int) -> lis
         case = cases_by_id.get(r["case_id"])
         if case is None:
             continue
+        if source is not None and case["source"] != source:
+            continue
         drifted.append({**r, "original_note": case["original_note"]})
         if len(drifted) >= n:
             break
     return drifted
 
 
-def load_clean_cases(sample_path: str, n: int) -> list[dict]:
+def load_clean_cases(sample_path: str, n: int, source: str | None = None) -> list[dict]:
     with open(sample_path, encoding="utf-8") as f:
         cases = [json.loads(line) for line in f if line.strip()]
+    if source is not None:
+        cases = [c for c in cases if c["source"] == source]
     return cases[:n]
 
 
@@ -137,11 +146,22 @@ if __name__ == "__main__":
     parser.add_argument("--out", default="../data/processed/tradeoff_results.jsonl")
     parser.add_argument("--out-curve", default="../data/processed/tradeoff_curve.json")
     parser.add_argument("--model-name", default="aaditya/Llama3-OpenBioLLM-8B")
+    parser.add_argument(
+        "--source",
+        default=None,
+        choices=["medqa", "mimic-iv-note"],
+        help=(
+            "filter to one source. 'medqa' is fully public -- safe on any cluster "
+            "(e.g. Nautilus, free GPUs). 'mimic-iv-note' contains real PhysioNet-"
+            "restricted evidence text -- only run that on a cleared environment "
+            "(e.g. your RunPod pod). Omit to run both mixed."
+        ),
+    )
     args = parser.parse_args()
 
     alphas = [float(a) for a in args.alphas.split(",")]
-    drifted_cases = load_drifted_cases(args.drift_results, args.sample, args.n_drifted)
-    clean_cases = load_clean_cases(args.sample, args.n_clean)
+    drifted_cases = load_drifted_cases(args.drift_results, args.sample, args.n_drifted, args.source)
+    clean_cases = load_clean_cases(args.sample, args.n_clean, args.source)
     print(
         f"{len(drifted_cases)} drifted cases x {len(alphas)} alphas = "
         f"{len(drifted_cases) * len(alphas)} recovery trials, plus {len(clean_cases)} clean-accuracy trials"

@@ -18,11 +18,18 @@ from llm_clients import LlamaMedClient
 from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
 
 
-def load_drifted_cases(drift_results_path: str, sample_path: str, n: int) -> list[dict]:
+def load_drifted_cases(
+    drift_results_path: str, sample_path: str, n: int, source: str | None = None
+) -> list[dict]:
     """Pulls cases that actually drifted under Claude -- the interesting
     ones to test ECD against -- and joins back to eval_sample.jsonl to get
     the real case evidence text (drift_results.jsonl only has the short
-    diagnosis labels and the adversarial note, not the original evidence)."""
+    diagnosis labels and the adversarial note, not the original evidence).
+
+    source: filter to 'medqa' (fully public, safe on any cluster) or
+    'mimic-iv-note' (real PhysioNet-restricted evidence text -- only run
+    that where this data is actually cleared to be, e.g. your RunPod pod,
+    not a shared cluster like Nautilus)."""
     with open(drift_results_path, encoding="utf-8") as f:
         results = [json.loads(line) for line in f if line.strip()]
     with open(sample_path, encoding="utf-8") as f:
@@ -34,6 +41,8 @@ def load_drifted_cases(drift_results_path: str, sample_path: str, n: int) -> lis
             continue
         case = cases_by_id.get(r["case_id"])
         if case is None:
+            continue
+        if source is not None and case["source"] != source:
             continue
         drifted.append({**r, "original_note": case["original_note"]})
         if len(drifted) >= n:
@@ -48,10 +57,16 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=5)
     parser.add_argument("--alphas", default="1,2", help="comma-separated nonzero alpha values to test")
     parser.add_argument("--model-name", default="aaditya/Llama3-OpenBioLLM-8B")
+    parser.add_argument(
+        "--source",
+        default=None,
+        choices=["medqa", "mimic-iv-note"],
+        help="filter to one source -- see load_drifted_cases docstring for why this matters",
+    )
     args = parser.parse_args()
 
     alphas = [float(a) for a in args.alphas.split(",")]
-    cases = load_drifted_cases(args.drift_results, args.sample, args.n)
+    cases = load_drifted_cases(args.drift_results, args.sample, args.n, args.source)
     print(f"testing ECD on {len(cases)} cases that drifted under Claude")
 
     client = LlamaMedClient(model_name=args.model_name)
