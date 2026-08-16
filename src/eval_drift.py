@@ -21,7 +21,7 @@ from pathlib import Path
 
 from adversarial_notes import CATEGORY_DEFINITIONS, build_generate_note_prompt
 from grade import build_drift_check_prompt, parse_verdict
-from llm_clients import AnthropicClient
+from llm_clients import get_claude_client
 from prompts import build_followup_prompt, parse_diagnosis
 
 
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         f"= {len(correct_cases) * 5} drift trials"
     )
 
-    client = AnthropicClient()
+    client = get_claude_client()
     results = run_drift_eval(correct_cases, client, args.out)
 
     table = drift_rate_table(results)

@@ -15,6 +15,7 @@ pod GPU/weights details before it can be implemented for real.
 """
 import os
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -62,6 +63,73 @@ class AnthropicClient(LLMClient):
             if block.type == "text":
                 return block.text
         raise RuntimeError(f"no text block in response: {resp.content}")
+
+
+def _read_multiline_input() -> str:
+    """Reads pasted lines until a line that's exactly END, or EOF."""
+    lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        if line.strip() == "END":
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
+
+class ManualClaudeClient(LLMClient):
+    """No API calls at all -- for when you've hit Anthropic's account quota
+    but still have normal Claude.ai access. Writes each prompt to a file
+    (safer than printing to terminal for long MIMIC-note prompts, which can
+    wrap/truncate in some terminals), you paste it into Claude.ai by hand,
+    then paste the response back into this terminal.
+
+    Same generate() interface as AnthropicClient, so any script that uses
+    it doesn't need to change -- see get_claude_client() below for the
+    toggle. No temperature/other API params to preserve: AnthropicClient
+    never set any beyond model/max_tokens, so this is behaviorally
+    equivalent on that front already.
+
+    max_tokens is accepted for interface compatibility but not enforced --
+    there's no API knob for it here. Mention it to Claude yourself in the
+    web UI if a response is running long.
+
+    Only realistic for smaller call volumes -- eval_drift.py alone is
+    ~2,880 calls, not something to paste by hand. Fine for ecd_tradeoff.py
+    (~120 calls by default, still a lot -- consider smaller --n-drifted/
+    --n-clean in manual mode) or small spot-check reruns.
+    """
+
+    name = "claude-manual"
+
+    def __init__(self, prompt_file: str = "../data/processed/_manual_prompt.txt"):
+        self.prompt_file = prompt_file
+
+    def generate(self, prompt: str, max_tokens: int = 500) -> str:
+        Path(self.prompt_file).parent.mkdir(parents=True, exist_ok=True)
+        Path(self.prompt_file).write_text(prompt, encoding="utf-8")
+
+        print("\n" + "=" * 60)
+        print(f"MANUAL MODE -- prompt written to {self.prompt_file}")
+        print("Paste it into Claude.ai, copy the full response, paste it below.")
+        print("Type END on its own line when done pasting the response.")
+        print("=" * 60)
+
+        return _read_multiline_input()
+
+
+def get_claude_client(model: str = "claude-sonnet-5") -> LLMClient:
+    """Toggle between real API calls and manual copy-paste mode via the
+    CLAUDE_MODE env var (in .env or exported in the shell) -- defaults to
+    'api'. Set CLAUDE_MODE=manual when you've hit an API quota/budget
+    limit. Use this everywhere instead of instantiating AnthropicClient
+    directly, so scripts don't need code changes to switch modes."""
+    mode = os.environ.get("CLAUDE_MODE", "api").lower()
+    if mode == "manual":
+        return ManualClaudeClient()
+    return AnthropicClient(model=model)
 
 
 class LlamaMedClient(LLMClient):

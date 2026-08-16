@@ -11,7 +11,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from grade import build_grade_prompt, parse_verdict
-from llm_clients import AnthropicClient
+from llm_clients import get_claude_client
 from prompts import build_baseline_prompt, parse_diagnosis
 
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cases = load_sample(args.sample)
-    client = AnthropicClient()
+    client = get_claude_client()
     # NOTE: same client grading its own output -- self-grading bias risk,
     # see grade.py docstring. Fine for a first pass, revisit once GPT-5/
     # Gemini budgets exist so a different model can cross-grade instead.

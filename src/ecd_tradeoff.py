@@ -25,7 +25,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from grade import build_grade_prompt, parse_verdict
-from llm_clients import AnthropicClient, LlamaMedClient
+from llm_clients import LlamaMedClient, get_claude_client
 from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
 
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     )
 
     llama_client = LlamaMedClient(model_name=args.model_name)
-    judge_client = AnthropicClient()
+    judge_client = get_claude_client()
 
     clean_accuracy = measure_clean_accuracy(clean_cases, llama_client, judge_client)
     print(f"clean-case accuracy (alpha-invariant): {json.dumps(clean_accuracy)}")
