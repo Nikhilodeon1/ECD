@@ -25,7 +25,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from grade import build_grade_prompt, parse_verdict
-from llm_clients import LlamaMedClient, get_claude_client
+from llm_clients import AnthropicClient, LlamaMedClient
 from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
 
 
@@ -69,42 +69,89 @@ def grade_match(judge_client, ground_truth: str, predicted: str) -> bool:
     return parse_verdict(raw)
 
 
-def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client) -> dict:
+def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client, out_path: str) -> dict:
     """Run once -- see module docstring for why this doesn't need to be
     swept per alpha. Uses alpha=0 (arbitrary; mathematically equivalent to
-    any other alpha here since original_prompt == full_prompt)."""
-    correct = 0
-    for c in clean_cases:
-        prompt = build_baseline_prompt(c["original_note"])
-        raw = llama_client.generate_ecd(prompt, prompt, alpha=0.0, max_tokens=200)
-        predicted = parse_diagnosis(raw)
-        if grade_match(judge_client, c["diagnosis_ground_truth"], predicted):
-            correct += 1
-    return {"accuracy": round(correct / len(clean_cases), 3), "n": len(clean_cases)}
+    any other alpha here since original_prompt == full_prompt).
+
+    Writes each result immediately and skips case_ids already in --out on
+    resume, same reasoning as eval_baseline.py/eval_drift.py."""
+    p = Path(out_path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    done_ids = set()
+    results = []
+    if p.exists():
+        with p.open(encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    r = json.loads(line)
+                    results.append(r)
+                    done_ids.add(r["case_id"])
+        if done_ids:
+            print(f"resuming clean-accuracy: {len(done_ids)} cases already done")
+
+    with p.open("a", encoding="utf-8") as f:
+        for c in clean_cases:
+            case_id = c["id"]  # clean_cases come straight from eval_sample.jsonl -- always has "id"
+            if case_id in done_ids:
+                continue
+            prompt = build_baseline_prompt(c["original_note"])
+            try:
+                raw = llama_client.generate_ecd(prompt, prompt, alpha=0.0, max_tokens=200)
+                predicted = parse_diagnosis(raw)
+                correct = grade_match(judge_client, c["diagnosis_ground_truth"], predicted)
+            except Exception as e:
+                print(f"clean case {case_id} failed: {e}")
+                continue
+            result = {"case_id": case_id, "correct": correct}
+            results.append(result)
+            f.write(json.dumps(result) + "\n")
+            f.flush()
+
+    n = len(results)
+    correct_n = sum(int(r["correct"]) for r in results)
+    return {"accuracy": round(correct_n / n, 3) if n else 0, "n": n}
 
 
 def sweep_drift_recovery(
     drifted_cases: list[dict], alphas: list[float], llama_client, judge_client, out_path: str
 ) -> dict:
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
     results = []
+    already_done = set()
+    if out.exists():
+        with out.open(encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    r = json.loads(line)
+                    results.append(r)
+                    already_done.add((r["case_id"], r["alpha"]))
+        if already_done:
+            print(f"resuming recovery sweep: {len(already_done)} trials already done")
+
     total = len(drifted_cases) * len(alphas)
     i = 0
-    for case in drifted_cases:
-        original_prompt = build_baseline_prompt(case["original_note"])
-        full_prompt = build_followup_prompt(case["original_note"], case["adversarial_note"])
+    with out.open("a", encoding="utf-8") as f:
+        for case in drifted_cases:
+            original_prompt = build_baseline_prompt(case["original_note"])
+            full_prompt = build_followup_prompt(case["original_note"], case["adversarial_note"])
 
-        for alpha in alphas:
-            i += 1
-            try:
-                raw = llama_client.generate_ecd(original_prompt, full_prompt, alpha=alpha, max_tokens=200)
-                predicted = parse_diagnosis(raw)
-                recovered = grade_match(judge_client, case["diagnosis_before"], predicted)
-            except Exception as e:
-                print(f"[{i}/{total}] {case['case_id']} alpha={alpha} failed: {e}")
-                continue
+            for alpha in alphas:
+                i += 1
+                if (case["case_id"], alpha) in already_done:
+                    continue
+                try:
+                    raw = llama_client.generate_ecd(
+                        original_prompt, full_prompt, alpha=alpha, max_tokens=200
+                    )
+                    predicted = parse_diagnosis(raw)
+                    recovered = grade_match(judge_client, case["diagnosis_before"], predicted)
+                except Exception as e:
+                    print(f"[{i}/{total}] {case['case_id']} alpha={alpha} failed: {e}")
+                    continue
 
-            results.append(
-                {
+                result = {
                     "case_id": case["case_id"],
                     "category": case["category"],
                     "alpha": alpha,
@@ -112,14 +159,10 @@ def sweep_drift_recovery(
                     "ecd_output": predicted,
                     "recovered": recovered,
                 }
-            )
-            print(f"[{i}/{total}] {case['case_id']} alpha={alpha} recovered={recovered}")
-
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", encoding="utf-8") as f:
-        for r in results:
-            f.write(json.dumps(r) + "\n")
+                results.append(result)
+                f.write(json.dumps(result) + "\n")
+                f.flush()
+                print(f"[{i}/{total}] {case['case_id']} alpha={alpha} recovered={recovered}")
 
     by_alpha = defaultdict(lambda: {"recovered": 0, "total": 0})
     for r in results:
@@ -144,6 +187,7 @@ if __name__ == "__main__":
     parser.add_argument("--n-clean", type=int, default=20)
     parser.add_argument("--alphas", default="0,0.5,1,1.5,2")
     parser.add_argument("--out", default="../data/processed/tradeoff_results.jsonl")
+    parser.add_argument("--out-clean", default="../data/processed/tradeoff_clean_accuracy.jsonl")
     parser.add_argument("--out-curve", default="../data/processed/tradeoff_curve.json")
     parser.add_argument("--model-name", default="aaditya/Llama3-OpenBioLLM-8B")
     parser.add_argument(
@@ -168,9 +212,9 @@ if __name__ == "__main__":
     )
 
     llama_client = LlamaMedClient(model_name=args.model_name)
-    judge_client = get_claude_client()
+    judge_client = AnthropicClient()
 
-    clean_accuracy = measure_clean_accuracy(clean_cases, llama_client, judge_client)
+    clean_accuracy = measure_clean_accuracy(clean_cases, llama_client, judge_client, args.out_clean)
     print(f"clean-case accuracy (alpha-invariant): {json.dumps(clean_accuracy)}")
 
     curve = sweep_drift_recovery(drifted_cases, alphas, llama_client, judge_client, args.out)

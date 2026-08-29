@@ -4,12 +4,11 @@ Usage (from src/, with .env containing ANTHROPIC_API_KEY):
     python subsample.py --n 300
     python eval_baseline.py
 
-Structured as two batched stages (generate all diagnoses, then grade all of
-them) rather than interleaving one case at a time -- in CLAUDE_MODE=manual
-this means one paste-many-get-many round trip per stage instead of 600
-individual round trips. In normal API mode this is behaviorally identical
-to the old interleaved version, generate_batch() just loops generate()
-under the hood (see llm_clients.py).
+Writes each case's result to disk immediately after it's computed (not
+batched at the end), and skips any case_id already present in --out on
+startup. So if this gets interrupted -- funds run out, pod dies, network
+drops -- rerunning the exact same command resumes instead of re-spending on
+cases that already succeeded.
 """
 import argparse
 import json
@@ -17,7 +16,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from grade import build_grade_prompt, parse_verdict
-from llm_clients import get_claude_client
+from llm_clients import AnthropicClient
 from prompts import build_baseline_prompt, parse_diagnosis
 
 
@@ -26,57 +25,63 @@ def load_sample(path: str) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def run_eval(
-    cases: list[dict],
-    generator_client,
-    grader_client,
-    out_path: str,
-    long_chunk_size: int = 40,
-    short_chunk_size: int = 400,
-) -> list[dict]:
-    # stage 1: generate a diagnosis for every case
-    # long prompts (embed a full clinical note, ~1200 tokens worst-case) --
-    # 40/chunk keeps well under a 200k context window with room for output
-    gen_prompts = [build_baseline_prompt(c["original_note"]) for c in cases]
-    raw_generations = generator_client.generate_batch(
-        gen_prompts, max_tokens=500, chunk_size=long_chunk_size
-    )
-    predicted = [parse_diagnosis(r) if r else "" for r in raw_generations]
+def load_existing_results(out_path: str) -> dict[str, dict]:
+    p = Path(out_path)
+    if not p.exists():
+        return {}
+    existing = {}
+    with p.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                r = json.loads(line)
+                existing[r["case_id"]] = r
+    return existing
 
-    # stage 2: grade every prediction against ground truth
-    # short prompts (just two diagnosis strings, ~250 tokens) -- can go big
-    grade_prompts = [
-        build_grade_prompt(c["diagnosis_ground_truth"], p) for c, p in zip(cases, predicted)
-    ]
-    raw_grades = grader_client.generate_batch(
-        grade_prompts, max_tokens=250, chunk_size=short_chunk_size
-    )
 
-    results = []
-    for c, raw, pred, grade_raw in zip(cases, raw_generations, predicted, raw_grades):
-        if not raw or not grade_raw:
-            print(f"skipping {c['id']}: missing generation or grade (see batch warnings above)")
-            continue
-        correct = parse_verdict(grade_raw)
-        results.append(
-            {
+def run_eval(cases: list[dict], generator_client, grader_client, out_path: str) -> list[dict]:
+    existing = load_existing_results(out_path)
+    if existing:
+        print(f"resuming: {len(existing)} cases already done, skipping those")
+
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    results = list(existing.values())
+
+    with out.open("a", encoding="utf-8") as f:
+        for i, c in enumerate(cases):
+            if c["id"] in existing:
+                continue
+
+            prompt = build_baseline_prompt(c["original_note"])
+            try:
+                raw = generator_client.generate(prompt)
+            except Exception as e:
+                print(f"[{i}] generation failed for {c['id']}: {e}")
+                continue
+            predicted = parse_diagnosis(raw)
+
+            grade_prompt = build_grade_prompt(c["diagnosis_ground_truth"], predicted)
+            try:
+                grade_raw = grader_client.generate(grade_prompt, max_tokens=250)
+            except Exception as e:
+                print(f"[{i}] grading failed for {c['id']}: {e}")
+                continue
+            correct = parse_verdict(grade_raw)
+
+            result = {
                 "case_id": c["id"],
                 "source": c["source"],
                 "model": generator_client.name,
                 "ground_truth": c["diagnosis_ground_truth"],
-                "predicted": pred,
+                "predicted": predicted,
                 "correct": correct,
                 "raw_generation": raw,
                 "raw_grade": grade_raw,
             }
-        )
-        print(f"{c['id']} correct={correct}")
-
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("w", encoding="utf-8") as f:
-        for r in results:
-            f.write(json.dumps(r) + "\n")
+            results.append(result)
+            f.write(json.dumps(result) + "\n")
+            f.flush()  # persisted immediately -- a crash/kill after this line doesn't lose it
+            print(f"[{i + 1}/{len(cases)}] {c['id']} correct={correct}")
 
     return results
 
@@ -102,27 +107,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", default="../data/processed/eval_sample.jsonl")
     parser.add_argument("--out", default="../data/processed/eval_results_claude.jsonl")
-    parser.add_argument(
-        "--long-chunk-size", type=int, default=40, help="manual mode only -- prompts with full notes"
-    )
-    parser.add_argument(
-        "--short-chunk-size", type=int, default=400, help="manual mode only -- grading prompts"
-    )
     args = parser.parse_args()
 
     cases = load_sample(args.sample)
-    client = get_claude_client()
+    client = AnthropicClient()
     # NOTE: same client grading its own output -- self-grading bias risk,
     # see grade.py docstring. Fine for a first pass, revisit once GPT-5/
     # Gemini budgets exist so a different model can cross-grade instead.
-    results = run_eval(
-        cases,
-        generator_client=client,
-        grader_client=client,
-        out_path=args.out,
-        long_chunk_size=args.long_chunk_size,
-        short_chunk_size=args.short_chunk_size,
-    )
+    results = run_eval(cases, generator_client=client, grader_client=client, out_path=args.out)
 
     table = accuracy_table(results)
     print(json.dumps(table, indent=2))
