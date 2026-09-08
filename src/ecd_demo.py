@@ -15,7 +15,7 @@ import argparse
 import json
 
 from llm_clients import LlamaMedClient
-from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
+from prompts import build_llama_baseline_prompt, build_llama_followup_prompt, parse_llama_diagnosis
 
 
 def load_drifted_cases(
@@ -77,18 +77,18 @@ if __name__ == "__main__":
         print(f"Claude's diagnosis after (drifted): {c['diagnosis_after']}")
         print(f"adversarial note: {c['adversarial_note'][:200]}")
 
-        original_prompt = build_baseline_prompt(c["original_note"])
-        full_prompt = build_followup_prompt(c["original_note"], c["adversarial_note"])
+        original_prompt = build_llama_baseline_prompt(c["original_note"])
+        full_prompt = build_llama_followup_prompt(c["original_note"], c["adversarial_note"])
 
-        # 100 was cutting real responses off mid-sentence in practice --
-        # this base model is also less reliable than Claude at sticking to
-        # the "Diagnosis: X" format, so parse_diagnosis often falls back to
-        # the raw text; more headroom at least avoids truncating that too
-        plain = parse_diagnosis(client.generate(full_prompt, max_tokens=200))
+        # Llama-specific prompt/parser -- see prompts.py comment for why:
+        # this model echoes bracket placeholders like "<your answer>"
+        # verbatim instead of filling them in, found by inspecting real
+        # Week 8 output. Worked-example + completion-style prompt fixes it.
+        plain = parse_llama_diagnosis(client.generate(full_prompt, max_tokens=200))
         print(f"Llama-Med plain (alpha=0, no defense): {plain}")
 
         for alpha in alphas:
-            ecd_out = parse_diagnosis(
+            ecd_out = parse_llama_diagnosis(
                 client.generate_ecd(original_prompt, full_prompt, alpha=alpha, max_tokens=200)
             )
             print(f"Llama-Med ECD alpha={alpha}: {ecd_out}")

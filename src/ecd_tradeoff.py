@@ -26,7 +26,7 @@ from pathlib import Path
 
 from grade import build_grade_prompt, parse_verdict
 from llm_clients import AnthropicClient, LlamaMedClient
-from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
+from prompts import build_llama_baseline_prompt, build_llama_followup_prompt, parse_llama_diagnosis
 
 
 def load_drifted_cases(
@@ -95,10 +95,10 @@ def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client, 
             case_id = c["id"]  # clean_cases come straight from eval_sample.jsonl -- always has "id"
             if case_id in done_ids:
                 continue
-            prompt = build_baseline_prompt(c["original_note"])
+            prompt = build_llama_baseline_prompt(c["original_note"])
             try:
                 raw = llama_client.generate_ecd(prompt, prompt, alpha=0.0, max_tokens=200)
-                predicted = parse_diagnosis(raw)
+                predicted = parse_llama_diagnosis(raw)
                 correct = grade_match(judge_client, c["diagnosis_ground_truth"], predicted)
             except Exception as e:
                 print(f"clean case {case_id} failed: {e}")
@@ -134,8 +134,8 @@ def sweep_drift_recovery(
     i = 0
     with out.open("a", encoding="utf-8") as f:
         for case in drifted_cases:
-            original_prompt = build_baseline_prompt(case["original_note"])
-            full_prompt = build_followup_prompt(case["original_note"], case["adversarial_note"])
+            original_prompt = build_llama_baseline_prompt(case["original_note"])
+            full_prompt = build_llama_followup_prompt(case["original_note"], case["adversarial_note"])
 
             for alpha in alphas:
                 i += 1
@@ -145,7 +145,7 @@ def sweep_drift_recovery(
                     raw = llama_client.generate_ecd(
                         original_prompt, full_prompt, alpha=alpha, max_tokens=200
                     )
-                    predicted = parse_diagnosis(raw)
+                    predicted = parse_llama_diagnosis(raw)
                     recovered = grade_match(judge_client, case["diagnosis_before"], predicted)
                 except Exception as e:
                     print(f"[{i}/{total}] {case['case_id']} alpha={alpha} failed: {e}")
