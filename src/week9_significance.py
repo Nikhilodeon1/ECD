@@ -50,26 +50,39 @@ def test_independent_rate_by_source(results: list[dict], outcome_key: str) -> di
 
 
 def build_paired_matrix(
-    results: list[dict], condition_key: str, outcome_key: str
+    results: list[dict], condition_key: str, outcome_key: str, id_fields: tuple[str, ...] = ("case_id",)
 ) -> tuple[list[list[bool]], list, int]:
-    """Pivots case_id x condition -> outcome. Drops any case_id missing a
-    value for any condition -- McNemar's/Cochran's Q need a complete matrix,
-    a partial row isn't a valid paired observation for those tests."""
-    by_case = defaultdict(dict)
+    """Pivots subject x condition -> outcome. The subject key matters:
+    tradeoff_results.jsonl can have the SAME case_id appear multiple times
+    (once per category it drifted under, each running its own full alpha
+    sweep) -- pivoting on case_id alone silently overwrites one category's
+    alpha row with another's. id_fields=("case_id","category") makes each
+    (case, category) combination its own subject, which is what's actually
+    independently alpha-swept. Week 6's category test doesn't have this
+    issue (case_id is already unique there), so its default stays case_id
+    alone. Drops any subject missing a value for any condition -- McNemar's/
+    Cochran's Q need a complete matrix, a partial row isn't a valid paired
+    observation."""
+    by_subject = defaultdict(dict)
     for r in results:
-        by_case[r["case_id"]][r[condition_key]] = r[outcome_key]
+        key = tuple(r[f] for f in id_fields)
+        by_subject[key][r[condition_key]] = r[outcome_key]
 
     conditions = sorted({r[condition_key] for r in results}, key=str)
-    complete_case_ids = [
-        cid for cid, row in by_case.items() if all(c in row for c in conditions)
+    complete_subjects = [
+        key for key, row in by_subject.items() if all(c in row for c in conditions)
     ]
-    dropped = len(by_case) - len(complete_case_ids)
-    matrix = [[by_case[cid][c] for c in conditions] for cid in complete_case_ids]
+    dropped = len(by_subject) - len(complete_subjects)
+    matrix = [[by_subject[key][c] for c in conditions] for key in complete_subjects]
     return matrix, conditions, dropped
 
 
 def test_paired_conditions(
-    results: list[dict], condition_key: str, outcome_key: str, baseline_condition=None
+    results: list[dict],
+    condition_key: str,
+    outcome_key: str,
+    baseline_condition=None,
+    id_fields: tuple[str, ...] = ("case_id",),
 ) -> dict:
     """Category vs. category, or alpha vs. alpha -- these ARE paired (same
     case tested under every condition, see eval_drift.py / ecd_tradeoff.py's
@@ -80,9 +93,9 @@ def test_paired_conditions(
     this one (e.g. every alpha vs. alpha=0.0) instead of all pairs -- fewer
     comparisons, more power after Holm correction, and matches the actual
     question ("does ECD beat undefended") better than every pair."""
-    matrix, conditions, dropped = build_paired_matrix(results, condition_key, outcome_key)
+    matrix, conditions, dropped = build_paired_matrix(results, condition_key, outcome_key, id_fields)
     if dropped:
-        print(f"dropped {dropped} incomplete cases (not present under all {len(conditions)} conditions)")
+        print(f"dropped {dropped} incomplete subjects (not present under all {len(conditions)} conditions)")
 
     overall = cochrans_q(matrix)
 
@@ -137,8 +150,15 @@ if __name__ == "__main__":
 
     tradeoff_results = load_jsonl(args.tradeoff_results)
     if tradeoff_results:
+        # id_fields includes "category": the same case_id can recur once per
+        # category it drifted under, each running its own independent alpha
+        # sweep -- case_id alone would silently collapse/overwrite those
         report["week8_recovery_rate_by_alpha"] = test_paired_conditions(
-            tradeoff_results, condition_key="alpha", outcome_key="recovered", baseline_condition=0.0
+            tradeoff_results,
+            condition_key="alpha",
+            outcome_key="recovered",
+            baseline_condition=0.0,
+            id_fields=("case_id", "category"),
         )
     else:
         print(f"skipping Week 8 test -- {args.tradeoff_results} not found (fine if that run isn't done yet)")
