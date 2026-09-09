@@ -3,9 +3,18 @@
 Which test to use depends on whether the comparison is PAIRED or INDEPENDENT
 -- this matters a lot in this project and it's easy to get wrong:
 
-- MedQA vs. MIMIC (baseline accuracy, drift rate): INDEPENDENT groups --
-  a given case is one source or the other, never both. Use Fisher's exact
-  test (two_proportion_fisher), not McNemar's.
+- MedQA vs. MIMIC baseline accuracy: INDEPENDENT groups, one row per case
+  (eval_results_claude.jsonl has exactly one entry per case). Fisher's exact
+  test (two_proportion_fisher) is correct here.
+- MedQA vs. MIMIC DRIFT RATE: also independent groups, but drift_results_
+  claude.jsonl has 5 ROWS per case (one per category) -- treating all 994
+  trial-rows as independent observations is pseudo-replication, since a
+  case's 5 category-trials are correlated (same patient, same underlying
+  evidence). The correct unit of analysis is the CASE, not the trial: first
+  collapse each case to its own drift proportion across its categories,
+  THEN compare the two groups' per-case proportions (mann_whitney_u), not
+  a trial-level 2x2 Fisher's test. Found and fixed during paper review --
+  see week9_significance.py's test_drift_rate_by_source_case_level.
 - Category vs. category (VCS/ISO/PLV/MMS/SNHR): PAIRED -- every
   baseline-correct case gets tested under all 5 categories (see
   eval_drift.py's trial construction: `for case in correct_cases: for
@@ -19,7 +28,7 @@ Which test to use depends on whether the comparison is PAIRED or INDEPENDENT
 Flagged back in Week 2's technical report as the right toolset
 (scipy.stats + statsmodels) -- this is that plan actually built out.
 """
-from scipy.stats import binomtest, chi2, fisher_exact
+from scipy.stats import binomtest, chi2, fisher_exact, mannwhitneyu
 from statsmodels.stats.multitest import multipletests
 
 
@@ -69,15 +78,38 @@ def cochrans_q(binary_matrix: list[list[bool]]) -> dict:
 
 
 def two_proportion_fisher(success_a: int, n_a: int, success_b: int, n_b: int) -> dict:
-    """INDEPENDENT-groups comparison (e.g. MedQA vs. MIMIC) -- Fisher's exact
-    over a 2x2 table, not McNemar's (these are different cases, not paired
-    measurements of the same subject)."""
+    """INDEPENDENT-groups comparison, ONE ROW PER SUBJECT ONLY (e.g. MedQA
+    vs. MIMIC baseline accuracy, where each case appears exactly once) --
+    Fisher's exact over a 2x2 table. Do NOT use this on data with multiple
+    rows per subject (e.g. drift trials, 5 rows per case) -- that's
+    pseudo-replication; use mann_whitney_u on per-subject aggregates instead."""
     table = [[success_a, n_a - success_a], [success_b, n_b - success_b]]
     odds_ratio, p_value = fisher_exact(table)
     return {
         "rate_a": round(success_a / n_a, 3) if n_a else 0,
         "rate_b": round(success_b / n_b, 3) if n_b else 0,
         "odds_ratio": round(odds_ratio, 3),
+        "p_value": p_value,
+    }
+
+
+def mann_whitney_u(group_a: list[float], group_b: list[float]) -> dict:
+    """INDEPENDENT-groups comparison when subjects contribute a continuous/
+    proportion-valued outcome rather than a single binary one -- e.g.
+    each case's OWN drift rate across its 5 categories (one number per
+    case, in [0,1]), compared between MedQA and MIMIC cases. Non-parametric,
+    doesn't assume normality, and correctly treats each case as one
+    independent observation instead of pooling its 5 trials as if
+    independent."""
+    if not group_a or not group_b:
+        return {"n_a": len(group_a), "n_b": len(group_b), "u": None, "p_value": 1.0}
+    u, p_value = mannwhitneyu(group_a, group_b, alternative="two-sided")
+    return {
+        "n_a": len(group_a),
+        "n_b": len(group_b),
+        "mean_a": round(sum(group_a) / len(group_a), 3),
+        "mean_b": round(sum(group_b) / len(group_b), 3),
+        "u": round(u, 3),
         "p_value": p_value,
     }
 

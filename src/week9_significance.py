@@ -16,7 +16,13 @@ import json
 from collections import defaultdict
 from itertools import combinations
 
-from significance import cochrans_q, holm_bonferroni, mcnemar_from_pairs, two_proportion_fisher
+from significance import (
+    cochrans_q,
+    holm_bonferroni,
+    mann_whitney_u,
+    mcnemar_from_pairs,
+    two_proportion_fisher,
+)
 
 
 def load_jsonl(path: str) -> list[dict] | None:
@@ -27,10 +33,13 @@ def load_jsonl(path: str) -> list[dict] | None:
         return None
 
 
-def test_independent_rate_by_source(results: list[dict], outcome_key: str) -> dict:
-    """MedQA vs. MIMIC on any binary outcome (correct, drifted) -- these are
-    INDEPENDENT groups (a case belongs to one source only), so Fisher's
-    exact is the right test, not McNemar's."""
+def test_independent_rate_by_source_one_row_per_case(results: list[dict], outcome_key: str) -> dict:
+    """MedQA vs. MIMIC where the input has exactly ONE row per case (e.g.
+    eval_results_claude.jsonl -- Week 5 baseline accuracy). Independent
+    groups, Fisher's exact is correct here. Do NOT use this on
+    drift_results_claude.jsonl -- that has 5 rows per case (one per
+    category), which would pseudo-replicate; use
+    test_drift_rate_by_source_case_level for that instead."""
     by_source = defaultdict(lambda: {"success": 0, "total": 0})
     for r in results:
         by_source[r["source"]]["total"] += 1
@@ -46,6 +55,36 @@ def test_independent_rate_by_source(results: list[dict], outcome_key: str) -> di
             by_source[a]["success"], by_source[a]["total"],
             by_source[b]["success"], by_source[b]["total"],
         ),
+    }
+
+
+def test_drift_rate_by_source_case_level(results: list[dict]) -> dict:
+    """MedQA vs. MIMIC drift rate, corrected for pseudo-replication: found
+    during paper review that testing this on all 994 trial-rows directly
+    (5 per case) treats each case's 5 category-trials as independent, which
+    they aren't (same patient, correlated evidence). Fix: collapse each case
+    to its OWN drift proportion across its categories first (one number per
+    case, in [0,1]), then compare the two groups' per-case proportions with
+    Mann-Whitney U -- the case, not the trial, is the true independent unit."""
+    by_case = defaultdict(lambda: {"source": None, "drifted": 0, "total": 0})
+    for r in results:
+        c = by_case[r["case_id"]]
+        c["source"] = r["source"]
+        c["total"] += 1
+        c["drifted"] += int(r["drifted"])
+
+    by_source_rates = defaultdict(list)
+    for case in by_case.values():
+        by_source_rates[case["source"]].append(case["drifted"] / case["total"])
+
+    sources = list(by_source_rates.keys())
+    if len(sources) != 2:
+        return {"skipped": f"expected exactly 2 sources, found {sources}"}
+    a, b = sources
+    return {
+        "comparison": f"{a} vs {b}",
+        "note": "per-case drift proportion, Mann-Whitney U (not trial-level Fisher's -- avoids pseudo-replication across a case's 5 category-trials)",
+        **mann_whitney_u(by_source_rates[a], by_source_rates[b]),
     }
 
 
@@ -131,7 +170,7 @@ if __name__ == "__main__":
 
     baseline_results = load_jsonl(args.baseline_results)
     if baseline_results:
-        report["week5_baseline_accuracy_by_source"] = test_independent_rate_by_source(
+        report["week5_baseline_accuracy_by_source"] = test_independent_rate_by_source_one_row_per_case(
             baseline_results, outcome_key="correct"
         )
     else:
@@ -139,9 +178,7 @@ if __name__ == "__main__":
 
     drift_results = load_jsonl(args.drift_results)
     if drift_results:
-        report["week6_drift_rate_by_source"] = test_independent_rate_by_source(
-            drift_results, outcome_key="drifted"
-        )
+        report["week6_drift_rate_by_source"] = test_drift_rate_by_source_case_level(drift_results)
         report["week6_drift_rate_by_category"] = test_paired_conditions(
             drift_results, condition_key="category", outcome_key="drifted"
         )
