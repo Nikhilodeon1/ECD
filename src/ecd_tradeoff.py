@@ -17,16 +17,35 @@ approximation, so re-running clean cases at every alpha would just
 re-confirm the same identity at real GPU/API cost for no new information.
 
 Usage (from src/, on the GPU pod):
-    python ecd_tradeoff.py --n-drifted 20 --n-clean 20 --alphas 0,0.5,1,1.5,2
+    python ecd_tradeoff.py --n-drifted 55 --n-clean 55 --alphas 0,0.5,1,1.5,2
+
+n defaults to 55/55 (up from an initial 20/20) -- generation is free local
+GPU, only judge-grading hits the Claude API, and grading prompts are short
+(~250 tokens), so this is a cheap way to get a real binomial CI before
+deciding whether the alpha-vs-recovery trend found at n=20 (recovery
+DECREASING with alpha -- opposite of the hypothesis) is real or just noise
+from a small sample. See docs/week8-tradeoff-results.md once it exists.
 """
 import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
 
+from scipy.stats import binomtest
+
 from grade import build_grade_prompt, parse_verdict
 from llm_clients import AnthropicClient, LlamaMedClient
 from prompts import build_llama_baseline_prompt, build_llama_followup_prompt, parse_llama_diagnosis
+
+
+def binomial_ci(successes: int, n: int, confidence: float = 0.95) -> tuple[float, float]:
+    """Exact (Clopper-Pearson) binomial CI -- the right tool for 'is this
+    rate stable at this n, or could a 2-3 case gap just be noise.'"""
+    if n == 0:
+        return (0.0, 0.0)
+    result = binomtest(successes, n)
+    ci = result.proportion_ci(confidence_level=confidence, method="exact")
+    return (round(ci.low, 3), round(ci.high, 3))
 
 
 def load_drifted_cases(
@@ -110,7 +129,11 @@ def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client, 
 
     n = len(results)
     correct_n = sum(int(r["correct"]) for r in results)
-    return {"accuracy": round(correct_n / n, 3) if n else 0, "n": n}
+    return {
+        "accuracy": round(correct_n / n, 3) if n else 0,
+        "n": n,
+        "ci_95": binomial_ci(correct_n, n),
+    }
 
 
 def sweep_drift_recovery(
@@ -173,6 +196,7 @@ def sweep_drift_recovery(
         str(alpha): {
             "recovery_rate": round(v["recovered"] / v["total"], 3) if v["total"] else 0,
             "n": v["total"],
+            "ci_95": binomial_ci(v["recovered"], v["total"]),
         }
         for alpha, v in sorted(by_alpha.items())
     }
@@ -183,8 +207,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--drift-results", default="../data/processed/drift_results_claude.jsonl")
     parser.add_argument("--sample", default="../data/processed/eval_sample.jsonl")
-    parser.add_argument("--n-drifted", type=int, default=20)
-    parser.add_argument("--n-clean", type=int, default=20)
+    parser.add_argument("--n-drifted", type=int, default=55)
+    parser.add_argument("--n-clean", type=int, default=55)
     parser.add_argument("--alphas", default="0,0.5,1,1.5,2")
     parser.add_argument("--out", default="../data/processed/tradeoff_results.jsonl")
     parser.add_argument("--out-clean", default="../data/processed/tradeoff_clean_accuracy.jsonl")
