@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex main"] 1788934937.39142 "main.aux" "main.bbl" "main" 1788934941.95416 0
+["bibtex main"] 1788935583.82999 "main.aux" "main.bbl" "main" 1788935588.78184 0
   "./ref.bib" 1788925940.62016 3329 20348688130c1e3eded542f0edfc9a45 ""
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/bibtex/bst/natbib/plainnat.bst" 1284455456 26816 ffe5423d2019860bad9f54bc402fac15 ""
-  "main.aux" 1788934939.79375 15479 f38065753c30d29730030927dce44dfc "pdflatex"
+  "main.aux" 1788935586.63867 15552 20b3a48a16f85ca24b56c7d3367208f7 "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1788934938.03891 "main.tex" "main.pdf" "main" 1788934941.95617 0
+["pdflatex"] 1788935584.59466 "main.tex" "main.pdf" "main" 1788935588.78403 0
   "../docs/week8-tradeoff-curve.png" 1788920644.22992 32453 8a68ad966282f28db0cf44636b71205d ""
   "C:/Users/nikhi/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1788920127.93185 163207 8b397a28da8cf491d72adf658ad1aa93 ""
   "C:/Users/nikhi/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm0700.pk" 1787640834.16891 8268 d177cd1e57a13fda04617474e4165181 ""
@@ -123,10 +123,10 @@
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/tex/latex/xkeyval/xkeyval.sty" 1656236919 4937 4ce600ce9bd4ec84d0250eb6892fcf4f ""
   "jmlr.cls" 1788917709.239 36008 577f2eaee245f14674ee3bcc80316111 ""
   "jmlrutils.sty" 1788917709.21938 16383 d87df192b6108379fb40be6cd618de1c ""
-  "main.aux" 1788934939.79375 15479 f38065753c30d29730030927dce44dfc "pdflatex"
-  "main.bbl" 1788934937.87227 3750 afeca3fd87f49989c0185dd4a1e850fc "bibtex main"
-  "main.out" 1788934939.80931 2478 be4abac5f1d62b57e00192dde61c506d "pdflatex"
-  "main.tex" 1788934906.722 27981 bbc025476f5a7a2c4b2379a7b01db0ee ""
+  "main.aux" 1788935586.63867 15552 20b3a48a16f85ca24b56c7d3367208f7 "pdflatex"
+  "main.bbl" 1788935584.37592 3750 afeca3fd87f49989c0185dd4a1e850fc "bibtex main"
+  "main.out" 1788935586.65273 2478 be4abac5f1d62b57e00192dde61c506d "pdflatex"
+  "main.tex" 1788935559.72702 27562 1b3581ff285fecca94c585e13f3f860b ""
   (generated)
   "main.aux"
   "main.log"

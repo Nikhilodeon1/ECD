@@ -51,9 +51,10 @@ proper statistical testing rather than descriptive comparison alone, and
 contrastive-decoding-based mitigation adapted from context-aware decoding.
 On our benchmark, a frontier model (Claude) drifts from a correct diagnosis
 in 28.2\% of trials, and drifts significantly more often on real clinical
-notes than on curated vignettes (43.3\% vs.\ 17.6\%; Fisher's exact
-$p=1.5\times10^{-18}$), a gap consistent with the same model's lower
-baseline accuracy on real notes ($p=2.9\times10^{-5}$). Testing ECD on an
+notes than on curated vignettes (43.2\% vs.\ 17.6\% mean per-case drift
+proportion; case-level Mann-Whitney $U$, $p=2.8\times10^{-10}$), a gap
+consistent with the same model's lower baseline accuracy on real notes
+($p=2.9\times10^{-5}$). Testing ECD on an
 open-weight model whose own baseline accuracy is itself modest and
 uncertain (38.2\%, 95\% CI [25.4, 52.3]), we find a directionally
 consistent but \emph{not statistically significant} decline in
@@ -298,40 +299,33 @@ Across 994 adversarial trials, the frontier model drifted from a correct
 diagnosis in 28.2\% of cases. This rate differed sharply by data source
 (Table~\ref{tab:main}): notes derived from real clinical documentation
 produced drift at more than double the rate of curated exam vignettes
-(43.3\% vs.\ 17.6\%, case-level Mann-Whitney $U$ test; \emph{exact
-corrected $p$-value pending a rerun with the fixed case-level test --
-see note below}). This mirrors a significant gap already present at
-baseline, before any adversarial note was introduced: the same model's
-baseline diagnostic accuracy was significantly lower on real notes than on
-curated vignettes ($p=2.9\times10^{-5}$, Fisher's exact, one row per case).
-Together, these results indicate that real clinical documentation is both
-harder to diagnose correctly and, once diagnosed correctly, less robust to
-a subsequent misleading note, compared to clean vignette-style cases -- a
-benchmark limited to curated vignettes would understate this risk.
-
-\emph{[Author note, remove before submission: the drift-rate $p$-value
-above was originally computed with a trial-level Fisher's exact test
-(994 rows, 5 per case), which pseudo-replicates within case; the
-significance code has been corrected to a case-level Mann-Whitney $U$
-test (Section~\ref{sec:methods}) and needs to be rerun on the real data
-to get the exact corrected $p$-value before this placeholder is
-replaced. Given the size of the gap (43.3\% vs.\ 17.6\%), the corrected
-result is expected to remain highly significant, but the literal number
-above must not be reported as-is.]}
+(mean per-case drift proportion 43.2\% vs.\ 17.6\%, case-level
+Mann-Whitney $U$ test over $n=82$ MIMIC and $n=117$ MedQA baseline-correct
+cases, $U=2357$, $p=2.8\times10^{-10}$). This mirrors a significant gap
+already present at baseline, before any adversarial note was introduced:
+the same model's baseline diagnostic accuracy was significantly lower on
+real notes than on curated vignettes ($p=2.9\times10^{-5}$, Fisher's
+exact, one row per case). Together, these results indicate that real
+clinical documentation is both harder to diagnose correctly and, once
+diagnosed correctly, less robust to a subsequent misleading note, compared
+to clean vignette-style cases -- a benchmark limited to curated vignettes
+would understate this risk.
 
 \begin{table}[htbp]
 \floatconts
   {tab:main}
   {\caption{Baseline accuracy and diagnosis drift rate by data source.
   Baseline accuracy: Fisher's exact (one row per case). Drift rate:
-  case-level Mann-Whitney $U$ ($p$-value pending corrected rerun, see text).}}
+  case-level Mann-Whitney $U$ on each case's own drift proportion across
+  its five categories, avoiding pseudo-replication from testing
+  individual trials as if independent.}}
   {\small
   \begin{tabular}{@{}lccc@{}}
   \toprule
   & \bfseries MedQA & \bfseries MIMIC-IV & \bfseries $p$ \\
   \midrule
   Baseline accuracy & 78.0\% & 54.7\% & $2.9\times10^{-5}$ \\
-  Drift rate & 17.6\% & 43.3\% & \emph{pending} \\
+  Drift rate & 17.6\% & 43.2\% & $2.8\times10^{-10}$ \\
   \bottomrule
   \end{tabular}}
 \end{table}
