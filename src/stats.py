@@ -1,9 +1,4 @@
-"""Computes baseline descriptive stats over a cases.jsonl file.
-
-Only ever outputs aggregate numbers -- counts, distributions, lengths -- never
-note text, so this file's output is safe to commit even though the input
-data file is not.
-"""
+"""Descriptive stats over a cases.jsonl file (aggregate counts only, no note text)."""
 import argparse
 import json
 import statistics

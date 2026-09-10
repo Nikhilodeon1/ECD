@@ -1,24 +1,10 @@
-"""Pluggable LLM client interface.
+"""LLM clients.
 
-Only Anthropic is wired up right now -- that's the only model with a
-confirmed API budget and a verified Zero Data Retention agreement (enterprise
-Anthropic account), which matters because this is the only client that's
-allowed to see real MIMIC note text per PhysioNet's cloud-API guidance.
+AnthropicClient: closed API, used for the drift benchmark and all grading
+(the account has a verified zero-data-retention agreement, required before
+sending MIMIC text to a cloud API).
 
-GPT-5 / Gemini stay as stubs until separate budgets + their own retention
-policies are confirmed -- don't wire real MIMIC data through them without
-doing the same DUA check done for Anthropic.
-
-Llama-Med runs locally on the pod (transformers/vllm), not through this
-client interface at all -- no cloud call, no retention question, but needs
-pod GPU/weights details before it can be implemented for real.
-
-Note: a manual copy-paste-into-Claude.ai mode existed briefly here (for
-when API quota ran out) but got dropped -- batching many prompts into one
-shared context turned out to change results measurably (a real confound,
-not just noise) compared to isolated API calls, so it's not worth the
-inconsistency. Back to API-only. If quota/budget becomes an issue again,
-solve it with more budget or fewer calls, not by mixing in manual mode.
+LlamaMedClient: local GPU inference, used for ECD (needs raw logit access).
 """
 import os
 from abc import ABC, abstractmethod
@@ -42,26 +28,18 @@ class AnthropicClient(LLMClient):
     def __init__(self, model: str = "claude-sonnet-5"):
         import anthropic
 
-        # accepts ClaudeKey too for now -- rename your .env var to
-        # ANTHROPIC_API_KEY when convenient, this fallback is just so it
-        # works today without you having to edit .env mid-eval
         api_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ClaudeKey")
         if not api_key:
-            raise RuntimeError("ANTHROPIC_API_KEY (or ClaudeKey) not set -- check .env")
+            raise RuntimeError("ANTHROPIC_API_KEY not set -- check .env")
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
 
     def generate(self, prompt: str, max_tokens: int = 500) -> str:
+        # thinking disabled: otherwise ~5% of calls spend the whole token
+        # budget on an unrequested thinking block and return no text
         resp = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
-            # the actual bug: without this, the model sometimes spends the
-            # whole max_tokens budget on an unrequested thinking block and
-            # never gets to emit any text at all (~4.7% of calls in a real
-            # run) -- not just a block-ordering issue, there was no text
-            # block present at all. Disabling thinking removes the failure
-            # mode outright; the higher default max_tokens is a cheap
-            # safety net on top (billed on actual tokens used, not the cap).
             thinking={"type": "disabled"},
             messages=[{"role": "user", "content": prompt}],
         )
@@ -72,30 +50,12 @@ class AnthropicClient(LLMClient):
 
 
 class LlamaMedClient(LLMClient):
-    """Local GPU inference -- runs on the pod, never makes a network call, so
-    there's no PhysioNet cloud-API question for this one (unlike Anthropic/
-    GPT-5/Gemini, which needed the DUA/retention check before touching MIMIC
-    text).
-
-    Default model is a placeholder -- "Llama-4-Med" from the proposal isn't
-    an actual released checkpoint, this needs a real HF model id. Swap via
-    the `model_name` arg once you've picked/confirmed one (aaditya/Llama3-
-    OpenBioLLM-8B is a reasonable real option: ~8B params, openly available,
-    fits a single GPU). Verified working in Week 7's real GPU run.
-
-    generate() gives plain single-context output, matching the same
-    interface as AnthropicClient so this model can run through the existing
-    eval_baseline.py / eval_drift.py harnesses unchanged. generate_ecd()
-    is the actual Week 7 defense -- see ecd_decode.py for the algorithm.
-    """
+    """Local GPU inference. generate() matches AnthropicClient's interface;
+    generate_ecd() is the ECD defense (see ecd_decode.py)."""
 
     name = "llama-med"
 
-    def __init__(
-        self,
-        model_name: str = "aaditya/Llama3-OpenBioLLM-8B",
-        device: str = "cuda",
-    ):
+    def __init__(self, model_name: str = "aaditya/Llama3-OpenBioLLM-8B", device: str = "cuda"):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer
 

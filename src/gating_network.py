@@ -1,16 +1,6 @@
-"""Week 8: gating network -- predicts drift risk from an adversarial note.
-
-Trained on the 960 labeled trials from Week 6 (src/eval_drift.py output):
-given an adversarial note's text + category, predict whether it caused
-Claude to drift. The predicted probability is meant to be used as a
-per-case gate: scale ECD's alpha by predicted risk (e.g. alpha_used =
-predicted_risk * alpha_max) instead of applying the same fixed alpha to
-every case regardless of how dangerous the specific note actually looks.
-
-Kept deliberately simple -- TF-IDF + logistic regression, not a deep model.
-960 labeled examples is a small dataset; a heavier model would likely
-overfit, and the point here is a usable per-case gating signal, not a
-novel classifier architecture.
+"""Gating network: TF-IDF + logistic regression on the drift trials
+(adversarial note text + category -> drifted?). Predicted probability is a
+per-case drift-risk score for scaling ECD's alpha.
 """
 import argparse
 import json
@@ -28,9 +18,7 @@ def load_training_data(drift_results_path: str) -> tuple[list[str], list[int]]:
     with open(drift_results_path, encoding="utf-8") as f:
         results = [json.loads(line) for line in f if line.strip()]
 
-    # fold category into the text itself as a cheap way to give the
-    # classifier that signal without a separate one-hot feature matrix
-    texts = [f"[{r['category']}] {r['adversarial_note']}" for r in results]
+    texts = [f"[{r['category']}] {r['adversarial_note']}" for r in results]  # category folded into text
     labels = [int(r["drifted"]) for r in results]
     return texts, labels
 
@@ -61,8 +49,7 @@ def train_gating_network(texts: list[str], labels: list[int], seed: int = 42):
 
 
 def predict_drift_risk(clf, vectorizer, adversarial_note: str, category: str) -> float:
-    """Returns P(this note causes drift) -- use to scale alpha per case,
-    e.g. alpha_used = predict_drift_risk(...) * alpha_max."""
+    """P(this note causes drift); scale alpha by this."""
     text = f"[{category}] {adversarial_note}"
     return float(clf.predict_proba(vectorizer.transform([text]))[0, 1])
 
@@ -89,24 +76,6 @@ if __name__ == "__main__":
     Path(args.out_metrics).write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     print(f"saved metrics -> {args.out_metrics}")
 
-    # Accuracy-vs-majority-baseline is the wrong sanity check for this model's
-    # actual use: predict_drift_risk() returns a continuous probability used
-    # to SCALE alpha (alpha_used = risk * alpha_max), never a hard yes/no
-    # classification -- so a below-baseline accuracy at the default 0.5
-    # threshold doesn't mean the score is useless, it means thresholding
-    # is the wrong lens. AUC is the right check: it measures whether the
-    # continuous score ranks drift-prone notes above safe ones across all
-    # thresholds, which is what scaling alpha actually depends on.
+    # AUC is the relevant check (continuous score, not a threshold classifier)
     if metrics["test_auc"] <= 0.55:
-        print(
-            f"WARNING: AUC {metrics['test_auc']} is close to chance (0.5) -- "
-            "this gating signal likely isn't worth using as a continuous score either"
-        )
-    elif metrics["test_accuracy"] <= metrics["baseline_majority_class_accuracy"]:
-        print(
-            f"NOTE: accuracy ({metrics['test_accuracy']}) is below the majority-class "
-            f"baseline ({metrics['baseline_majority_class_accuracy']}), but AUC "
-            f"({metrics['test_auc']}) is meaningfully above chance -- expected given "
-            "class imbalance, and fine for the continuous-score use case this drives "
-            "(alpha scaling), just don't use this as a hard classifier at threshold 0.5"
-        )
+        print(f"WARNING: AUC {metrics['test_auc']} near chance -- weak gating signal")

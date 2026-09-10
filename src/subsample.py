@@ -1,19 +1,8 @@
-"""Builds a fixed, reproducible eval subsample from the full cases.jsonl.
+"""Fixed reproducible eval subsample (reused across all experiments).
 
-The same sample (same seed, same file) gets reused across Weeks 5-8 so
-baseline accuracy, adversarial drift, and defense results are all measured
-on the same cases -- otherwise comparisons across weeks aren't valid.
-
-Caps how many times a single diagnosis can appear (--max-per-diagnosis) so
-the sample isn't dominated by the handful of extremely common ICU
-diagnoses (sepsis, pneumonia, UTI, etc. each appear 2,000-5,000+ times in
-the raw MIMIC data).
-
-Also enforces a target count PER SOURCE (default: even split across
-whatever sources are present) rather than sampling from the combined pool
--- the MIMIC pool is ~1,400x bigger than MedQA's even after per-diagnosis
-capping, so naive combined-pool sampling all but erases MedQA from the
-result. Override with --source-n if you want a different split.
+Capped per diagnosis so common ICU diagnoses don't dominate; even split
+per source by default (the MIMIC pool dwarfs MedQA's). Override with
+--source-n.
 """
 import argparse
 import json
@@ -74,7 +63,7 @@ def stratified_sample(
 
 
 def parse_source_n(raw: str) -> dict[str, int]:
-    """Parses '--source-n medqa=150,mimic-iv-note=150' into a dict."""
+    """'medqa=150,mimic-iv-note=150' -> dict."""
     out = {}
     for pair in raw.split(","):
         source, count = pair.split("=")

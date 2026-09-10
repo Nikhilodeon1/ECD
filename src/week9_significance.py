@@ -1,15 +1,5 @@
-"""Week 9: significance testing driver.
-
-Runs the actual formal significance tests behind Weeks 5, 6, and 8's
-headline numbers -- turns "44% vs 17%" into a real p-value, and checks
-whether the category/alpha differences are real or noise (the same
-question the CIs in ecd_tradeoff.py were already hinting at for the alpha
-sweep -- this makes it formal).
-
-Usage (from src/, after eval_baseline.py and eval_drift.py have produced
-their output -- ecd_tradeoff.py's output is optional, its test is skipped
-cleanly if that file doesn't exist yet):
-    python week9_significance.py
+"""Significance testing driver: reads eval/drift/tradeoff result files,
+writes significance_report.json. Skips the tradeoff test if that file is absent.
 """
 import argparse
 import json
@@ -34,12 +24,7 @@ def load_jsonl(path: str) -> list[dict] | None:
 
 
 def test_independent_rate_by_source_one_row_per_case(results: list[dict], outcome_key: str) -> dict:
-    """MedQA vs. MIMIC where the input has exactly ONE row per case (e.g.
-    eval_results_claude.jsonl -- Week 5 baseline accuracy). Independent
-    groups, Fisher's exact is correct here. Do NOT use this on
-    drift_results_claude.jsonl -- that has 5 rows per case (one per
-    category), which would pseudo-replicate; use
-    test_drift_rate_by_source_case_level for that instead."""
+    """MedQA vs MIMIC, one row per case (baseline accuracy). Fisher's exact."""
     by_source = defaultdict(lambda: {"success": 0, "total": 0})
     for r in results:
         by_source[r["source"]]["total"] += 1
@@ -59,13 +44,8 @@ def test_independent_rate_by_source_one_row_per_case(results: list[dict], outcom
 
 
 def test_drift_rate_by_source_case_level(results: list[dict]) -> dict:
-    """MedQA vs. MIMIC drift rate, corrected for pseudo-replication: found
-    during paper review that testing this on all 994 trial-rows directly
-    (5 per case) treats each case's 5 category-trials as independent, which
-    they aren't (same patient, correlated evidence). Fix: collapse each case
-    to its OWN drift proportion across its categories first (one number per
-    case, in [0,1]), then compare the two groups' per-case proportions with
-    Mann-Whitney U -- the case, not the trial, is the true independent unit."""
+    """MedQA vs MIMIC drift rate: per-case drift proportion, Mann-Whitney U
+    (case is the independent unit, not the trial)."""
     by_case = defaultdict(lambda: {"source": None, "drifted": 0, "total": 0})
     for r in results:
         c = by_case[r["case_id"]]
@@ -81,27 +61,15 @@ def test_drift_rate_by_source_case_level(results: list[dict]) -> dict:
     if len(sources) != 2:
         return {"skipped": f"expected exactly 2 sources, found {sources}"}
     a, b = sources
-    return {
-        "comparison": f"{a} vs {b}",
-        "note": "per-case drift proportion, Mann-Whitney U (not trial-level Fisher's -- avoids pseudo-replication across a case's 5 category-trials)",
-        **mann_whitney_u(by_source_rates[a], by_source_rates[b]),
-    }
+    return {"comparison": f"{a} vs {b}", **mann_whitney_u(by_source_rates[a], by_source_rates[b])}
 
 
 def build_paired_matrix(
     results: list[dict], condition_key: str, outcome_key: str, id_fields: tuple[str, ...] = ("case_id",)
 ) -> tuple[list[list[bool]], list, int]:
-    """Pivots subject x condition -> outcome. The subject key matters:
-    tradeoff_results.jsonl can have the SAME case_id appear multiple times
-    (once per category it drifted under, each running its own full alpha
-    sweep) -- pivoting on case_id alone silently overwrites one category's
-    alpha row with another's. id_fields=("case_id","category") makes each
-    (case, category) combination its own subject, which is what's actually
-    independently alpha-swept. Week 6's category test doesn't have this
-    issue (case_id is already unique there), so its default stays case_id
-    alone. Drops any subject missing a value for any condition -- McNemar's/
-    Cochran's Q need a complete matrix, a partial row isn't a valid paired
-    observation."""
+    """Pivot subject x condition -> outcome. id_fields=("case_id","category")
+    for the alpha sweep, where a case_id recurs once per drifted category.
+    Drops subjects missing any condition."""
     by_subject = defaultdict(dict)
     for r in results:
         key = tuple(r[f] for f in id_fields)
@@ -123,18 +91,11 @@ def test_paired_conditions(
     baseline_condition=None,
     id_fields: tuple[str, ...] = ("case_id",),
 ) -> dict:
-    """Category vs. category, or alpha vs. alpha -- these ARE paired (same
-    case tested under every condition, see eval_drift.py / ecd_tradeoff.py's
-    trial construction), so this uses Cochran's Q (joint) + pairwise
-    McNemar's with Holm-Bonferroni correction, not independent-group tests.
-
-    baseline_condition: if given, only tests each other condition against
-    this one (e.g. every alpha vs. alpha=0.0) instead of all pairs -- fewer
-    comparisons, more power after Holm correction, and matches the actual
-    question ("does ECD beat undefended") better than every pair."""
+    """Paired conditions (category or alpha): Cochran's Q + pairwise McNemar
+    with Holm-Bonferroni. baseline_condition restricts pairs to X vs baseline."""
     matrix, conditions, dropped = build_paired_matrix(results, condition_key, outcome_key, id_fields)
     if dropped:
-        print(f"dropped {dropped} incomplete subjects (not present under all {len(conditions)} conditions)")
+        print(f"dropped {dropped} incomplete subjects")
 
     overall = cochrans_q(matrix)
 
@@ -187,18 +148,15 @@ if __name__ == "__main__":
 
     tradeoff_results = load_jsonl(args.tradeoff_results)
     if tradeoff_results:
-        # id_fields includes "category": the same case_id can recur once per
-        # category it drifted under, each running its own independent alpha
-        # sweep -- case_id alone would silently collapse/overwrite those
         report["week8_recovery_rate_by_alpha"] = test_paired_conditions(
             tradeoff_results,
             condition_key="alpha",
             outcome_key="recovered",
             baseline_condition=0.0,
-            id_fields=("case_id", "category"),
+            id_fields=("case_id", "category"),  # case_id recurs per drifted category
         )
     else:
-        print(f"skipping Week 8 test -- {args.tradeoff_results} not found (fine if that run isn't done yet)")
+        print(f"skipping Week 8 test -- {args.tradeoff_results} not found")
 
     print(json.dumps(report, indent=2, default=str))
 

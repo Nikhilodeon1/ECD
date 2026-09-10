@@ -1,13 +1,4 @@
-"""Combines MedQA + MIMIC-IV-Note into one cases file.
-
-Usage:
-    python build_dataset.py --medqa-split test
-    python build_dataset.py --medqa-split test --discharge /path/to/discharge.csv.gz \
-        --diagnoses-icd /path/to/diagnoses_icd.csv.gz --d-icd /path/to/d_icd_diagnoses.csv.gz
-
-MIMIC args are optional so this can be run locally (MedQA only) or on the pod
-(both sources) without editing the script.
-"""
+"""Combine MedQA + MIMIC-IV-Note into one cases file. MIMIC args optional."""
 import argparse
 import json
 from pathlib import Path
@@ -33,7 +24,7 @@ def main():
         print(f"mimic: {len(mimic_cases)} cases")
         cases += mimic_cases
     else:
-        print("no --discharge given, skipping MIMIC (fine to run this way locally)")
+        print("no --discharge given, skipping MIMIC")
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)

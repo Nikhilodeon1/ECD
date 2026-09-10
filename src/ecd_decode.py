@@ -1,29 +1,13 @@
-"""Evidential Consistency Decoding (ECD) -- the core algorithm from the proposal.
+"""Evidential Consistency Decoding: Context-Aware Decoding (Shi et al. 2023)
+applied to temporal sycophancy.
 
-This is Context-Aware Decoding (Shi et al.) applied to temporal sycophancy --
-see docs/week2-technologies-report.md for why this is CAD and not a new
-algorithm, and why it can only run against a local open-weight model (needs
-raw per-token logit access, which no closed API exposes).
-
-At each generated token, runs two forward passes:
-  - "full" context: original note + adversarial follow-up note
-  - "original" context: original note only
-and blends their log-probabilities:
+Per token, two KV-cached forward passes (full context = original + adversarial
+note; original context = original only), blended:
 
     log p_final = (1 + alpha) * log p_full - alpha * log p_original
 
-alpha=0 reduces to plain greedy decoding on the full context (verified by
-the self-test below). Higher alpha pushes the output away from whatever the
-adversarial note alone would cause and back toward what the original
-evidence alone supports.
-
-Uses KV-caching on both passes (each step only feeds the single new token +
-past_key_values) rather than re-running the full sequence every step, since
-that would be O(n^2) and unusably slow even on small models.
-
-REQUIRES A GPU for any real medical model -- this file's own self-test runs
-on CPU against tiny gpt2 purely to verify the blending math and cache
-plumbing are correct, not to validate anything about medical reasoning.
+alpha=0 == plain greedy decoding on the full context. Run with no args for
+the CPU self-test (gpt2, checks the math, not medical reasoning).
 """
 import torch
 
@@ -66,8 +50,7 @@ def generate_with_ecd(
             break
         generated.append(next_token.item())
 
-        # next step only needs the new token -- KV cache carries the rest
-        input_full = next_token
+        input_full = next_token  # KV cache carries the rest
         input_original = next_token
 
     return tokenizer.decode(generated, skip_special_tokens=True)
@@ -75,8 +58,6 @@ def generate_with_ecd(
 
 @torch.no_grad()
 def generate_plain_greedy(model, tokenizer, prompt: str, max_new_tokens: int = 200, device: str = "cpu") -> str:
-    """Plain greedy decoding on a single context -- used only to verify
-    alpha=0 reduces to this exactly."""
     ids = tokenizer(prompt, return_tensors="pt").input_ids.to(device)
     out = model.generate(
         ids,
@@ -88,35 +69,28 @@ def generate_plain_greedy(model, tokenizer, prompt: str, max_new_tokens: int = 2
 
 
 def _self_test():
-    """CPU-runnable check that the ECD math/caching is correct. Uses tiny
-    gpt2, not a medical model -- this validates the mechanism, not any
-    medical reasoning. Run with: python ecd_decode.py"""
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    print("loading gpt2 for self-test (small, CPU, no gating)...")
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     model = AutoModelForCausalLM.from_pretrained("gpt2")
 
     prompt = "The capital of France is"
-
-    # alpha=0 must reduce to plain greedy decoding on the full context --
-    # the one thing we can assert exactly, not just "looks reasonable"
     ecd_alpha0 = generate_with_ecd(
         model, tokenizer, original_prompt=prompt, full_prompt=prompt, alpha=0.0, max_new_tokens=10
     )
     plain = generate_plain_greedy(model, tokenizer, prompt, max_new_tokens=10)
-    assert ecd_alpha0 == plain, f"alpha=0 mismatch:\n  ecd:   {ecd_alpha0!r}\n  plain: {plain!r}"
-    print(f"alpha=0 matches plain greedy decoding exactly: {ecd_alpha0!r}")
+    assert ecd_alpha0 == plain, f"alpha=0 mismatch: {ecd_alpha0!r} vs {plain!r}"
+    print(f"alpha=0 == plain greedy: {ecd_alpha0!r}")
 
-    # sanity check that a nonzero alpha with different original/full
-    # contexts actually runs without shape errors and produces *something*
-    original = "The weather today is"
-    full = "The weather today is sunny and the sky is completely clear with"
     ecd_alpha1 = generate_with_ecd(
-        model, tokenizer, original_prompt=original, full_prompt=full, alpha=1.0, max_new_tokens=10
+        model,
+        tokenizer,
+        original_prompt="The weather today is",
+        full_prompt="The weather today is sunny and the sky is completely clear with",
+        alpha=1.0,
+        max_new_tokens=10,
     )
-    print(f"alpha=1.0 with divergent contexts ran cleanly: {ecd_alpha1!r}")
-
+    print(f"alpha=1.0 divergent contexts: {ecd_alpha1!r}")
     print("self-test passed")
 
 

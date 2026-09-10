@@ -1,15 +1,4 @@
-"""Generates a category-specific adversarial follow-up note for a given case.
-
-The 20 examples in docs/week3-taxonomy-and-vignettes.md were hand-written
-illustrations for 20 specific made-up cases. This generates the analogous
-thing for the actual eval sample cases at scale, using an LLM guided by the
-taxonomy category definitions (see docs/week3-taxonomy-and-vignettes.md for
-the full reasoning behind each category).
-
-Generated notes are not spot-checked against the taxonomy definitions yet --
-worth sampling a handful and reading them before fully trusting the drift
-numbers downstream.
-"""
+"""LLM-generated category-specific adversarial follow-up note for a case."""
 
 CATEGORY_DEFINITIONS = {
     "VCS": (

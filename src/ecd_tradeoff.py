@@ -1,30 +1,7 @@
-"""Week 8: accuracy-drift tradeoff curve for ECD.
-
-Sweeps alpha across cases that drifted under Claude in Week 6, running
-Llama-Med + ECD on each and measuring the DRIFT RECOVERY RATE at each
-alpha: does the ECD-defended output match the original pre-drift (correct)
-diagnosis? Grading uses Claude as an LLM-judge (src/grade.py), not string
-parsing -- Week 7 showed this open model doesn't reliably follow the
-structured "Diagnosis: X" format, so exact parsing would undercount
-correct-but-differently-worded recoveries.
-
-Clean-case accuracy is measured ONCE, not swept per alpha. When there's no
-adversarial note, original_prompt == full_prompt, so both ECD forward
-passes see identical input and produce identical logits -- the blend
-(1+a)*x - a*x collapses to exactly x for any alpha. This is a provable
-property of the algorithm (see docs/week8-tradeoff-results.md), not an
-approximation, so re-running clean cases at every alpha would just
-re-confirm the same identity at real GPU/API cost for no new information.
-
-Usage (from src/, on the GPU pod):
-    python ecd_tradeoff.py --n-drifted 55 --n-clean 55 --alphas 0,0.5,1,1.5,2
-
-n defaults to 55/55 (up from an initial 20/20) -- generation is free local
-GPU, only judge-grading hits the Claude API, and grading prompts are short
-(~250 tokens), so this is a cheap way to get a real binomial CI before
-deciding whether the alpha-vs-recovery trend found at n=20 (recovery
-DECREASING with alpha -- opposite of the hypothesis) is real or just noise
-from a small sample. See docs/week8-tradeoff-results.md once it exists.
+"""ECD accuracy-drift tradeoff: sweep alpha over drifted cases (Llama-Med +
+ECD), grade recovery via Claude judge. GPU required; only judge calls hit
+the API. Clean-case accuracy measured once (alpha-invariant when there is
+no adversarial note: full context == original context).
 """
 import argparse
 import json
@@ -39,21 +16,17 @@ from prompts import build_llama_baseline_prompt, build_llama_followup_prompt, pa
 
 
 def binomial_ci(successes: int, n: int, confidence: float = 0.95) -> tuple[float, float]:
-    """Exact (Clopper-Pearson) binomial CI -- the right tool for 'is this
-    rate stable at this n, or could a 2-3 case gap just be noise.'"""
+    """Exact (Clopper-Pearson) binomial CI."""
     if n == 0:
         return (0.0, 0.0)
-    result = binomtest(successes, n)
-    ci = result.proportion_ci(confidence_level=confidence, method="exact")
+    ci = binomtest(successes, n).proportion_ci(confidence_level=confidence, method="exact")
     return (round(ci.low, 3), round(ci.high, 3))
 
 
 def load_drifted_cases(
     drift_results_path: str, sample_path: str, n: int, source: str | None = None
 ) -> list[dict]:
-    """source: filter to 'medqa' (fully public, safe on any cluster) or
-    'mimic-iv-note' (real PhysioNet-restricted evidence text, only run this
-    where that's cleared). None = no filter, mixes both."""
+    """source='mimic-iv-note' must only run where that data is cleared to be."""
     with open(drift_results_path, encoding="utf-8") as f:
         results = [json.loads(line) for line in f if line.strip()]
     with open(sample_path, encoding="utf-8") as f:
@@ -89,12 +62,7 @@ def grade_match(judge_client, ground_truth: str, predicted: str) -> bool:
 
 
 def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client, out_path: str) -> dict:
-    """Run once -- see module docstring for why this doesn't need to be
-    swept per alpha. Uses alpha=0 (arbitrary; mathematically equivalent to
-    any other alpha here since original_prompt == full_prompt).
-
-    Writes each result immediately and skips case_ids already in --out on
-    resume, same reasoning as eval_baseline.py/eval_drift.py."""
+    """Run once (alpha-invariant). Writes each result immediately, resumes on rerun."""
     p = Path(out_path)
     p.parent.mkdir(parents=True, exist_ok=True)
     done_ids = set()
@@ -111,7 +79,7 @@ def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client, 
 
     with p.open("a", encoding="utf-8") as f:
         for c in clean_cases:
-            case_id = c["id"]  # clean_cases come straight from eval_sample.jsonl -- always has "id"
+            case_id = c["id"]
             if case_id in done_ids:
                 continue
             prompt = build_llama_baseline_prompt(c["original_note"])
@@ -214,17 +182,7 @@ if __name__ == "__main__":
     parser.add_argument("--out-clean", default="../data/processed/tradeoff_clean_accuracy.jsonl")
     parser.add_argument("--out-curve", default="../data/processed/tradeoff_curve.json")
     parser.add_argument("--model-name", default="aaditya/Llama3-OpenBioLLM-8B")
-    parser.add_argument(
-        "--source",
-        default=None,
-        choices=["medqa", "mimic-iv-note"],
-        help=(
-            "filter to one source. 'medqa' is fully public -- safe on any cluster "
-            "(e.g. Nautilus, free GPUs). 'mimic-iv-note' contains real PhysioNet-"
-            "restricted evidence text -- only run that on a cleared environment "
-            "(e.g. your RunPod pod). Omit to run both mixed."
-        ),
-    )
+    parser.add_argument("--source", default=None, choices=["medqa", "mimic-iv-note"])
     args = parser.parse_args()
 
     alphas = [float(a) for a in args.alphas.split(",")]
@@ -271,4 +229,4 @@ if __name__ == "__main__":
         plt.savefig(plot_path, dpi=150)
         print(f"plot -> {plot_path}")
     except Exception as e:
-        print(f"plotting failed (non-fatal, data is already saved): {e}")
+        print(f"plotting failed (data already saved): {e}")

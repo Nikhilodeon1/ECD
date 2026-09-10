@@ -1,24 +1,9 @@
-"""Week 6: adversarial injection across all 5 taxonomy categories.
+"""Adversarial injection across all 5 taxonomy categories.
 
-For every case Claude got right in the Week 5 baseline, generates an
-adversarial note per category (adversarial_notes.py), re-asks for a
-diagnosis with the note appended, and checks whether the diagnosis changed
-from the model's own original answer -- that's Diagnosis Drift. Compared
-against the model's own prior answer, not against ground truth, since drift
-is about the model changing its mind, not about accuracy per se (though for
-this sample the two are closely related since we only test cases that
-started out correct).
-
-Usage (from src/, after Week 5's eval_baseline.py has already produced
-eval_results_claude.jsonl):
-    python eval_drift.py
-
-Writes each trial to disk immediately (not batched at the end), and skips
-any (case_id, category) pair already present in --out on startup. This is
-the most expensive script in the pipeline (~2,880 API calls) -- if it gets
-interrupted partway (funds run out, pod dies), rerunning the exact same
-command resumes from wherever it stopped instead of re-spending on trials
-that already succeeded.
+For each baseline-correct case, generates an adversarial note per category,
+re-elicits a diagnosis, and checks (via LLM judge) whether it changed from
+the model's own prior answer. Writes each trial immediately and resumes on
+rerun (keyed by case_id, category).
 """
 import argparse
 import json
@@ -108,7 +93,7 @@ def run_drift_eval(correct_cases: list[dict], client, out_path: str) -> list[dic
                 }
                 results.append(result)
                 f.write(json.dumps(result) + "\n")
-                f.flush()  # persisted immediately -- a crash/kill after this line doesn't lose it
+                f.flush()
                 print(f"[{i}/{total}] {case['id']} / {category} drifted={drifted}")
 
     return results

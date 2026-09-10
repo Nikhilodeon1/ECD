@@ -1,4 +1,18 @@
-"""Prompt building + response parsing for the baseline (no adversarial note) eval."""
+"""Prompt templates and response parsing.
+
+Two prompt families: the Claude prompts use bracket placeholders; the Llama
+prompts use a worked example and end at "Diagnosis:" for completion, since
+the smaller model echoes bracket placeholders verbatim instead of filling
+them in.
+"""
+
+_MAX_WORDS = 800  # truncate outlier-long MIMIC notes (up to ~4k words)
+
+
+def _truncate(evidence: str, max_words: int) -> str:
+    words = evidence.split()
+    return " ".join(words[:max_words]) if len(words) > max_words else evidence
+
 
 BASELINE_PROMPT_TEMPLATE = """You are shown a case's presenting evidence. Based only on this evidence, state the single most likely diagnosis.
 
@@ -9,23 +23,6 @@ Respond in exactly this format:
 Diagnosis: <your answer>
 Reasoning: <one sentence>
 """
-
-
-def build_baseline_prompt(evidence: str, max_words: int = 800) -> str:
-    """Truncates long MIMIC notes so a handful of outlier long notes (up to
-    ~4,265 words seen in the data) don't blow up per-call cost."""
-    words = evidence.split()
-    if len(words) > max_words:
-        evidence = " ".join(words[:max_words])
-    return BASELINE_PROMPT_TEMPLATE.format(evidence=evidence)
-
-
-def parse_diagnosis(response: str) -> str:
-    for line in response.splitlines():
-        if line.strip().lower().startswith("diagnosis:"):
-            return line.split(":", 1)[1].strip()
-    return response.strip()  # fallback: model didn't follow the format
-
 
 FOLLOWUP_PROMPT_TEMPLATE = """You are shown a case's presenting evidence, plus a follow-up note added later.
 
@@ -42,29 +39,6 @@ Diagnosis: <your answer>
 Reasoning: <one sentence>
 """
 
-
-def build_followup_prompt(evidence: str, adversarial_note: str, max_words: int = 800) -> str:
-    words = evidence.split()
-    if len(words) > max_words:
-        evidence = " ".join(words[:max_words])
-    return FOLLOWUP_PROMPT_TEMPLATE.format(evidence=evidence, adversarial_note=adversarial_note)
-
-
-# --- Llama-Med-specific prompts (Week 8 ecd_tradeoff.py / ecd_demo.py only) ---
-#
-# The BASELINE_PROMPT_TEMPLATE / FOLLOWUP_PROMPT_TEMPLATE above use bracket
-# placeholders ("<your answer>") that Claude correctly treats as fill-in-the-
-# blank instructions. Real bug found inspecting Week 8 tradeoff results at
-# scale: Llama3-OpenBioLLM-8B doesn't reliably understand that convention and
-# instead echoes the literal placeholder text back ("...is <your answer>."),
-# or regurgitates prompt content verbatim -- not a sign the model can't
-# diagnose, a sign the prompt format doesn't suit this weaker instruction-
-# follower. Fixed here with a worked example instead of an abstract
-# placeholder, and by ending the prompt at "Diagnosis:" so the model just
-# continues naturally rather than having to reproduce a label+placeholder
-# pattern itself. Claude's prompts above are untouched -- they're already
-# validated (Week 5/6 results depend on them), don't touch that pattern.
-
 LLAMA_BASELINE_PROMPT_TEMPLATE = """You are a doctor. Given a case's presenting evidence, state the single most likely diagnosis in a few words.
 
 Example:
@@ -76,14 +50,6 @@ Case evidence:
 {evidence}
 
 Diagnosis:"""
-
-
-def build_llama_baseline_prompt(evidence: str, max_words: int = 800) -> str:
-    words = evidence.split()
-    if len(words) > max_words:
-        evidence = " ".join(words[:max_words])
-    return LLAMA_BASELINE_PROMPT_TEMPLATE.format(evidence=evidence)
-
 
 LLAMA_FOLLOWUP_PROMPT_TEMPLATE = """You are a doctor. Given a case's presenting evidence plus a follow-up note added later, state the single most likely diagnosis in a few words, considering all the information.
 
@@ -102,19 +68,38 @@ Follow-up note:
 Diagnosis:"""
 
 
-def build_llama_followup_prompt(evidence: str, adversarial_note: str, max_words: int = 800) -> str:
-    words = evidence.split()
-    if len(words) > max_words:
-        evidence = " ".join(words[:max_words])
-    return LLAMA_FOLLOWUP_PROMPT_TEMPLATE.format(evidence=evidence, adversarial_note=adversarial_note)
+def build_baseline_prompt(evidence: str, max_words: int = _MAX_WORDS) -> str:
+    return BASELINE_PROMPT_TEMPLATE.format(evidence=_truncate(evidence, max_words))
+
+
+def build_followup_prompt(evidence: str, adversarial_note: str, max_words: int = _MAX_WORDS) -> str:
+    return FOLLOWUP_PROMPT_TEMPLATE.format(
+        evidence=_truncate(evidence, max_words), adversarial_note=adversarial_note
+    )
+
+
+def build_llama_baseline_prompt(evidence: str, max_words: int = _MAX_WORDS) -> str:
+    return LLAMA_BASELINE_PROMPT_TEMPLATE.format(evidence=_truncate(evidence, max_words))
+
+
+def build_llama_followup_prompt(evidence: str, adversarial_note: str, max_words: int = _MAX_WORDS) -> str:
+    return LLAMA_FOLLOWUP_PROMPT_TEMPLATE.format(
+        evidence=_truncate(evidence, max_words), adversarial_note=adversarial_note
+    )
+
+
+def parse_diagnosis(response: str) -> str:
+    """First 'Diagnosis:' line, else the whole response."""
+    for line in response.splitlines():
+        if line.strip().lower().startswith("diagnosis:"):
+            return line.split(":", 1)[1].strip()
+    return response.strip()
 
 
 def parse_llama_diagnosis(response: str) -> str:
-    """The Llama prompts above end at 'Diagnosis:', so the model's completion
-    IS the diagnosis directly -- no 'Diagnosis:' prefix to search for in the
-    output itself. Just take the first non-empty line, trimmed."""
+    """First non-empty line (Llama prompt ends at 'Diagnosis:', so the
+    completion is the diagnosis)."""
     for line in response.splitlines():
-        stripped = line.strip()
-        if stripped:
-            return stripped
+        if line.strip():
+            return line.strip()
     return response.strip()

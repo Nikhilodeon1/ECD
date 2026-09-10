@@ -1,14 +1,7 @@
-"""Runs baseline (no adversarial note) diagnosis eval and produces an accuracy table.
+"""Baseline (no adversarial note) diagnosis eval -> accuracy table.
 
-Usage (from src/, with .env containing ANTHROPIC_API_KEY):
-    python subsample.py --n 300
-    python eval_baseline.py
-
-Writes each case's result to disk immediately after it's computed (not
-batched at the end), and skips any case_id already present in --out on
-startup. So if this gets interrupted -- funds run out, pod dies, network
-drops -- rerunning the exact same command resumes instead of re-spending on
-cases that already succeeded.
+Writes each result immediately and skips case_ids already in --out, so
+rerunning the same command resumes an interrupted run.
 """
 import argparse
 import json
@@ -80,7 +73,7 @@ def run_eval(cases: list[dict], generator_client, grader_client, out_path: str) 
             }
             results.append(result)
             f.write(json.dumps(result) + "\n")
-            f.flush()  # persisted immediately -- a crash/kill after this line doesn't lose it
+            f.flush()
             print(f"[{i + 1}/{len(cases)}] {c['id']} correct={correct}")
 
     return results
@@ -110,10 +103,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     cases = load_sample(args.sample)
-    client = AnthropicClient()
-    # NOTE: same client grading its own output -- self-grading bias risk,
-    # see grade.py docstring. Fine for a first pass, revisit once GPT-5/
-    # Gemini budgets exist so a different model can cross-grade instead.
+    client = AnthropicClient()  # self-grading, see grade.py
     results = run_eval(cases, generator_client=client, grader_client=client, out_path=args.out)
 
     table = accuracy_table(results)

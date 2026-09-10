@@ -1,11 +1,4 @@
-"""Loads MedQA (USMLE) and filters it down to diagnosis-style questions.
-
-MedQA is mostly NOT diagnosis questions -- it's full of ethics, pharmacology,
-management, and next-step questions too. Only ~18-20% of it (measured on the
-test split) is actually "given this presentation, what's the diagnosis"
-style, which is what this project needs. We filter for that instead of using
-the whole thing.
-"""
+"""Load MedQA (USMLE), keep only diagnosis-style questions (~18% of the test split)."""
 import argparse
 import json
 import re
