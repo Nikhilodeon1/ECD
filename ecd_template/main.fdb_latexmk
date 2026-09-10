@@ -1,17 +1,19 @@
 # Fdb version 4
-["bibtex main"] 1788935583.82999 "main.aux" "main.bbl" "main" 1788935588.78184 0
+["bibtex main"] 1788938400.87083 "main.aux" "main.bbl" "main" 1788938406.00145 0
   "./ref.bib" 1788925940.62016 3329 20348688130c1e3eded542f0edfc9a45 ""
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/bibtex/bst/natbib/plainnat.bst" 1284455456 26816 ffe5423d2019860bad9f54bc402fac15 ""
-  "main.aux" 1788935586.63867 15552 20b3a48a16f85ca24b56c7d3367208f7 "pdflatex"
+  "main.aux" 1788938403.68457 17924 aa3a1aa74a6586770b86c55bcb28121e "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
   (rewritten before read)
-["pdflatex"] 1788935584.59466 "main.tex" "main.pdf" "main" 1788935588.78403 0
+["pdflatex"] 1788938401.61547 "main.tex" "main.pdf" "main" 1788938406.00348 0
   "../docs/week8-tradeoff-curve.png" 1788920644.22992 32453 8a68ad966282f28db0cf44636b71205d ""
   "C:/Users/nikhi/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1788920127.93185 163207 8b397a28da8cf491d72adf658ad1aa93 ""
+  "C:/Users/nikhi/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcbx1000.pk" 1788938388.48369 12124 c1dc1df35bcbe066bdc8ffbf426e859b ""
   "C:/Users/nikhi/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm0700.pk" 1787640834.16891 8268 d177cd1e57a13fda04617474e4165181 ""
   "C:/Users/nikhi/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1787640554.66706 13333487 438b3c7fd77bae7cdca95c58c903c3a7 ""
+  "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/tcbx1000.tfm" 993062478 1456 278016b1e421c8e979679e0372f68bf1 ""
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/tcrm0700.tfm" 993062506 1452 97bdc98984cb373fbcd868e2fa55f5f2 ""
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1233951848 1004 54797486969f23fa377b128694d548df ""
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/tfm/public/amsfonts/cmextra/cmex9.tfm" 1234365220 996 a18840b13b499c08ac2de96a99eda4bc ""
@@ -123,10 +125,10 @@
   "C:/Users/nikhi/AppData/Local/Programs/MiKTeX/tex/latex/xkeyval/xkeyval.sty" 1656236919 4937 4ce600ce9bd4ec84d0250eb6892fcf4f ""
   "jmlr.cls" 1788917709.239 36008 577f2eaee245f14674ee3bcc80316111 ""
   "jmlrutils.sty" 1788917709.21938 16383 d87df192b6108379fb40be6cd618de1c ""
-  "main.aux" 1788935586.63867 15552 20b3a48a16f85ca24b56c7d3367208f7 "pdflatex"
-  "main.bbl" 1788935584.37592 3750 afeca3fd87f49989c0185dd4a1e850fc "bibtex main"
-  "main.out" 1788935586.65273 2478 be4abac5f1d62b57e00192dde61c506d "pdflatex"
-  "main.tex" 1788935559.72702 27562 1b3581ff285fecca94c585e13f3f860b ""
+  "main.aux" 1788938403.68457 17924 aa3a1aa74a6586770b86c55bcb28121e "pdflatex"
+  "main.bbl" 1788938401.41102 3750 afeca3fd87f49989c0185dd4a1e850fc "bibtex main"
+  "main.out" 1788938403.69964 2478 be4abac5f1d62b57e00192dde61c506d "pdflatex"
+  "main.tex" 1788938373.53008 31634 514e81c65d46404ffc849b424e3f4262 ""
   (generated)
   "main.aux"
   "main.log"

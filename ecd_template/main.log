@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.8.24)  8 SEP 2026 23:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.8.24)  9 SEP 2026 00:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -600,22 +600,22 @@ Underfull \hbox (badness 4819) in paragraph at lines 270--275
  []
 
 [3]
-Overfull \hbox (12.19496pt too wide) in paragraph at lines 330--330
+Overfull \hbox (12.19496pt too wide) in paragraph at lines 333--333
  [][] 
  []
+
+
+Underfull \vbox (badness 2426) has occurred while \output is active []
+
+
+Underfull \vbox (badness 2426) has occurred while \output is active []
 
 <../docs/week8-tradeoff-curve.png, id=160, 505.89pt x 325.215pt>
 File: ../docs/week8-tradeoff-curve.png Graphic file (type png)
 <use ../docs/week8-tradeoff-curve.png>
 Package pdftex.def Info: ../docs/week8-tradeoff-curve.png  used on input line 3
-67.
+70.
 (pdftex.def)             Requested size: 206.88832pt x 133.00157pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
  [4]
 (main.bbl [5 <../docs/week8-tradeoff-curve.png>]
 Underfull \hbox (badness 1565) in paragraph at lines 64--68
@@ -624,56 +624,95 @@ Underfull \hbox (badness 1565) in paragraph at lines 64--68
  []
 
 )
-Underfull \hbox (badness 2644) in paragraph at lines 460--462
+Underfull \vbox (badness 1163) has occurred while \output is active []
+
+
+Underfull \vbox (badness 1163) has occurred while \output is active []
+
+
+Underfull \hbox (badness 2644) in paragraph at lines 463--465
 []\OT1/cmr/m/n/10 Appendicitis mis-di-ag-nosed as stom-ach bug.
  []
 
 
-Underfull \hbox (badness 1072) in paragraph at lines 475--477
+Underfull \hbox (badness 1072) in paragraph at lines 478--480
 []\OT1/cmr/m/n/10 Pulmonary em-bolism mis-di-ag-nosed as cos-to-
  []
 
 
-Underfull \hbox (badness 7907) in paragraph at lines 481--483
+Underfull \hbox (badness 7907) in paragraph at lines 484--486
  []\OT1/cmr/bx/n/10 PLV (Per-turbed Lab Value).[] \OT1/cmr/m/n/10 One value
  []
 
-
-Underfull \hbox (badness 1946) in paragraph at lines 486--488
+[6]
+Underfull \hbox (badness 1946) in paragraph at lines 489--491
 \OT1/cmr/m/n/10 came back pos-i-tive for leuko-cyte es-terase.''
  []
 
-[6]
-Underfull \hbox (badness 10000) in paragraph at lines 490--492
+
+Underfull \hbox (badness 10000) in paragraph at lines 493--495
 []\OT1/cmr/m/n/10 Cholecystitis mis-di-ag-nosed as gas-tri-tis.
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 490--492
+Underfull \hbox (badness 10000) in paragraph at lines 493--495
 \OT1/cmr/m/n/10 ``AST/ALT just re-sulted, both nor-mal.''
  []
 
 
-Underfull \hbox (badness 1270) in paragraph at lines 494--496
+Underfull \hbox (badness 1270) in paragraph at lines 497--499
  []\OT1/cmr/bx/n/10 MMS (Mis-lead-ing Med-i-ca-tion Sug-ges-tion).[]
  []
 
 
-Underfull \hbox (badness 2726) in paragraph at lines 497--499
+Underfull \hbox (badness 2726) in paragraph at lines 500--502
 []\OT1/cmr/m/n/10 Bacterial pneu-mo-nia mis-di-ag-nosed as vi-ral.
  []
 
 
-Underfull \hbox (badness 6910) in paragraph at lines 497--499
+Underfull \hbox (badness 6910) in paragraph at lines 500--502
 \OT1/cmr/m/n/10 ``Phar-macy: Tam-i-flu started em-pir-i-cally.''
  []
 
 
-Underfull \hbox (badness 2903) in paragraph at lines 499--501
+Underfull \hbox (badness 2903) in paragraph at lines 502--504
 \OT1/cmr/m/n/10 ``Nurs-ing: gave D50 per pro-to-col, speech
  []
 
-[7] (main.aux)
+
+Underfull \hbox (badness 1635) in paragraph at lines 534--547
+ []\OT1/cmr/bx/n/10 MIMIC-IV-Note ex-trac-tion.[] \OT1/cmr/m/n/10 From each dis
+-
+ []
+
+
+Underfull \hbox (badness 2772) in paragraph at lines 548--556
+\OT1/cmr/m/n/10 duced 331,840 to-tal con-structed cases (331,604
+ []
+
+[7]
+Underfull \hbox (badness 10000) in paragraph at lines 567--573
+ []\OT1/cmr/bx/n/10 Category-vs-category drift rate (\TS1/cmr/bx/n/10 §\OT1/cmr
+/bx/n/10 6.1).[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 598--603
+ []\OT1/cmr/bx/n/10 Alpha-vs-alpha re-cov-ery rate (\TS1/cmr/bx/n/10 §\OT1/cmr/
+bx/n/10 6.2).[]
+ []
+
+
+Underfull \hbox (badness 4266) in paragraph at lines 623--628
+ []\OT1/cmr/bx/n/10 Exact bi-no-mial 95% con-fi-dence in-ter-vals
+ []
+
+
+Underfull \hbox (badness 8075) in paragraph at lines 623--628
+\OT1/cmr/bx/n/10 (Clopper-Pearson), un-der-ly-ing Fig-ure [][]1[][].[]
+ []
+
+[8] (main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -686,37 +725,39 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: BE4ABAC5F1D62B57E00192DDE61C506D;2478.
  ) 
 Here is how much of TeX's memory you used:
- 17230 strings out of 467871
- 329490 string characters out of 5418376
- 766925 words of memory out of 5000000
- 45853 multiletter control sequences out of 15000+600000
- 636147 words of font info for 72 fonts, out of 8000000 for 9000
+ 17249 strings out of 467871
+ 329701 string characters out of 5418376
+ 767211 words of memory out of 5000000
+ 45861 multiletter control sequences out of 15000+600000
+ 636487 words of font info for 73 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 90i,10n,98p,472b,1158s stack positions out of 10000i,1000n,20000p,200000b,200000s
- <C:\Users\nikhi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm
-0700.pk><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
-ts/cm/cmbx10.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/publ
-ic/amsfonts/cm/cmbx12.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/t
-ype1/public/amsfonts/cm/cmbx9.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Users/nikhi/AppData/Local/Progr
-ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/nikhi/AppData/Lo
-cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/Users/nikhi/Ap
-pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/
-nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:
-/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.
-pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmr9.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmss8.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmsy10.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts
-/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKT
-eX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/nikhi/AppData/Local/Progr
-ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/nikhi/AppData/Loc
-al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/nikhi/Ap
-pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti9.pfb><C:/Users/
-nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on main.pdf (7 pages, 339445 bytes).
+ 90i,10n,98p,472b,1156s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ <C:\Users\nikhi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcbx
+1000.pk> <C:\Users\nikhi\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi60
+0\tcrm0700.pk><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+amsfonts/cm/cmbx10.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type
+1/public/amsfonts/cm/cmbx12.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/f
+onts/type1/public/amsfonts/cm/cmbx9.pfb><C:/Users/nikhi/AppData/Local/Programs/
+MiKTeX/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Users/nikhi/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/nikhi/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/Users/ni
+khi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/
+Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.p
+fb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
+/cmr7.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsf
+onts/cm/cmr9.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/amsfonts/cm/cmss8.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/public/amsfonts/cm/cmsy10.pfb><C:/Users/nikhi/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/nikhi/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/nikhi/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/nikhi/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/ni
+khi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti9.pfb><C:/
+Users/nikhi/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10
+.pfb>
+Output written on main.pdf (8 pages, 348874 bytes).
 PDF statistics:
- 316 PDF objects out of 1000 (max. 8388607)
- 74 named destinations out of 1000 (max. 500000)
+ 337 PDF objects out of 1000 (max. 8388607)
+ 84 named destinations out of 1000 (max. 500000)
  110 words of extra memory for PDF output out of 10000 (max. 10000000)
 

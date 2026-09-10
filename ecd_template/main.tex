@@ -85,13 +85,13 @@ available at an anonymous repository mirror provided with this submission
 and will be de-anonymized upon acceptance.
 
 \paragraph*{Institutional Review Board (IRB)}
-This work involves no new data collection from human subjects: both
-datasets are existing, de-identified secondary resources used under their
-respective terms (MedQA: public; MIMIC-IV-Note: PhysioNet credentialed
-access under an executed data use agreement). Our institution's
-determination for this specific project (expected: Not Human Subjects
-Research, consistent with standard secondary-analysis-of-de-identified-data
-determinations) will be provided if the paper is accepted.
+This work does not require IRB approval. No new data was collected from
+human subjects: both datasets are existing, de-identified secondary
+resources used under their respective terms (MedQA: public;
+MIMIC-IV-Note: PhysioNet credentialed access under an executed data use
+agreement covering secondary research use of already-de-identified data).
+There is no direct or indirect contact with human subjects at any point in
+this study.
 
 \section{Introduction}
 \label{sec:intro}
@@ -295,8 +295,11 @@ the frontier model used for the main drift benchmark.
 
 \subsection{Diagnosis drift is common and source-dependent}
 
-Across 994 adversarial trials, the frontier model drifted from a correct
-diagnosis in 28.2\% of cases. This rate differed sharply by data source
+Across 994 adversarial trials (199 baseline-correct cases -- 82 MIMIC-IV,
+117 MedQA -- $\times$ 5 categories = 995 expected trials, less one that
+failed to complete and was excluded rather than imputed), the frontier
+model drifted from a correct diagnosis in 28.2\% of cases. This rate
+differed sharply by data source
 (Table~\ref{tab:main}): notes derived from real clinical documentation
 produced drift at more than double the rate of curated exam vignettes
 (mean per-case drift proportion 43.2\% vs.\ 17.6\%, case-level
@@ -519,16 +522,108 @@ low-authority note, usually relaying family speech.
 
 \section{Dataset Construction Detail}
 \label{apd:data}
-[Full pipeline detail: MedQA diagnosis-question filter criteria, MIMIC-IV
-section-extraction procedure, ICD-based ground truth resolution, and
-dataset-level summary statistics (331,840 total constructed cases;
-$<$1\% of MIMIC cases dropped for unparseable evidence sections) go here.]
+
+\paragraph{MedQA filtering.} MedQA's test split contains 1,273 USMLE-style
+questions spanning diagnosis, ethics, pharmacology, and management topics.
+We keep only questions whose stem asks for a diagnosis (matched via a
+keyword filter on phrases such as ``most likely diagnosis,'' ``most likely
+cause,'' ``underlying diagnosis''), yielding 236 diagnosis-style questions.
+The correct answer choice becomes the ground-truth diagnosis; the question
+stem becomes the case evidence shown to the model.
+
+\paragraph{MIMIC-IV-Note extraction.} From each discharge summary we
+extract only the History of Present Illness, Past Medical History,
+Physical Exam, and Pertinent Results sections via header-pattern matching,
+explicitly excluding the Discharge Diagnosis section (and any other
+outcome-revealing section) so the label cannot leak into the model's
+input. Ground truth is the primary (\texttt{seq\_num=1}) ICD diagnosis
+code for the admission, joined against the ICD code-title table, rather
+than a free-text diagnosis statement, since free-text discharge diagnosis
+sections are inconsistently formatted and sometimes list multiple
+diagnoses without a clear primary. Notes are streamed from the source
+file in chunks rather than loaded as a single dataframe, since the full
+discharge-note table is large enough to exceed available memory on a
+modest compute instance.
+
+\paragraph{Dataset yield and quality filtering.} This produced 331,840
+total constructed cases (331,604 from MIMIC-IV-Note, 236 from MedQA).
+0.64\% of MIMIC cases were dropped for producing zero-word evidence text
+and a further 0.32\% for producing under-20-word evidence text (both
+symptomatic of a discharge note whose section headers did not match our
+extraction pattern); together under 1\% of MIMIC cases were dropped on
+this basis, and we did not attempt to recover them via a more permissive
+parser given the low rate.
+
+\paragraph{Sampling.} The evaluation sample used throughout the paper is
+drawn with a fixed random seed, stratified to an even split across the
+two sources, and capped at three cases per unique ground-truth diagnosis
+so that a small number of extremely common ICU diagnoses (e.g.\ sepsis,
+pneumonia) do not dominate the sample. The same sample is reused across
+all experiments in the paper for comparability.
 
 \section{Full Significance Testing Detail}
 \label{apd:stats}
-[Complete pairwise McNemar / Holm-Bonferroni tables for both the
-category-vs-category and $\alpha$-vs-$\alpha$ comparisons, and the exact
-binomial confidence intervals underlying Figure~\ref{fig:tradeoff}, go
-here.]
+
+\paragraph{Category-vs-category drift rate (\S6.1).} Cochran's $Q=5.481$,
+$df=4$, $p=0.241$ over $n=198$ cases with complete data across all five
+categories (one case was missing one category's trial and was excluded).
+Table~\ref{tab:cat-pairwise} gives all ten pairwise McNemar tests with
+Holm-Bonferroni correction; none reach significance, consistent with the
+non-significant omnibus test.
+
+\begin{table}[htbp]
+\floatconts
+  {tab:cat-pairwise}
+  {\caption{Pairwise McNemar tests, category vs.\ category drift rate,
+  Holm-Bonferroni corrected $p$-values.}}
+  {\small
+  \begin{tabular}{@{}lc@{}}
+  \toprule
+  \bfseries Pair & \bfseries $p$ (corrected) \\
+  \midrule
+  ISO vs.\ MMS & 1.000 \\
+  ISO vs.\ PLV & 1.000 \\
+  ISO vs.\ SNHR & 1.000 \\
+  ISO vs.\ VCS & 1.000 \\
+  MMS vs.\ PLV & 0.722 \\
+  MMS vs.\ SNHR & 1.000 \\
+  MMS vs.\ VCS & 1.000 \\
+  PLV vs.\ SNHR & 0.805 \\
+  PLV vs.\ VCS & 0.735 \\
+  SNHR vs.\ VCS & 1.000 \\
+  \bottomrule
+  \end{tabular}}
+\end{table}
+
+\paragraph{Alpha-vs-alpha recovery rate (\S6.2).} Cochran's $Q=5.333$,
+$df=4$, $p=0.255$ over $n=54$ cases with complete data across all five
+$\alpha$ values. Table~\ref{tab:alpha-pairwise} gives the four pairwise
+McNemar tests against the $\alpha=0$ baseline, Holm-Bonferroni corrected;
+none reach significance.
+
+\begin{table}[htbp]
+\floatconts
+  {tab:alpha-pairwise}
+  {\caption{Pairwise McNemar tests against $\alpha=0$, recovery rate,
+  Holm-Bonferroni corrected $p$-values.}}
+  {\small
+  \begin{tabular}{@{}lc@{}}
+  \toprule
+  \bfseries Comparison & \bfseries $p$ (corrected) \\
+  \midrule
+  $\alpha=0$ vs.\ $\alpha=0.5$ & 1.000 \\
+  $\alpha=0$ vs.\ $\alpha=1.0$ & 1.000 \\
+  $\alpha=0$ vs.\ $\alpha=1.5$ & 1.000 \\
+  $\alpha=0$ vs.\ $\alpha=2.0$ & 1.000 \\
+  \bottomrule
+  \end{tabular}}
+\end{table}
+
+\paragraph{Exact binomial 95\% confidence intervals (Clopper-Pearson),
+underlying Figure~\ref{fig:tradeoff}.} Clean-case accuracy: 38.2\%
+[25.4, 52.3], $n=55$. Recovery rate by $\alpha$ ($n=54$ each):
+$\alpha=0$: 5.6\% [1.2, 15.4]; $\alpha=0.5$: 5.6\% [1.2, 15.4];
+$\alpha=1.0$: 5.6\% [1.2, 15.4]; $\alpha=1.5$: 1.9\% [0.0, 9.9];
+$\alpha=2.0$: 0.0\% [0.0, 6.6].
 
 \end{document}

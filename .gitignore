@@ -19,3 +19,6 @@ venv/
 # os junk
 .DS_Store
 Thumbs.db
+
+docs/
+ecd_template/

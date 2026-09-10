@@ -203,9 +203,12 @@ INPUT ..\docs\week8-tradeoff-curve.png
 INPUT .\main.bbl
 INPUT .\main.bbl
 INPUT main.bbl
+INPUT C:\Users\nikhi\AppData\Local\Programs\MiKTeX\fonts\tfm\jknappen\ec\tcbx1000.tfm
 INPUT main.aux
 INPUT .\main.out
 INPUT .\main.out
+INPUT C:\Users\nikhi\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\tcbx1000.pk
+INPUT C:\Users\nikhi\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\tcbx1000.pk
 INPUT C:\Users\nikhi\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\tcrm0700.pk
 INPUT C:\Users\nikhi\AppData\Local\MiKTeX\fonts\pk\ljfour\jknappen\ec\dpi600\tcrm0700.pk
 INPUT C:\Users\nikhi\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmbx10.pfb
