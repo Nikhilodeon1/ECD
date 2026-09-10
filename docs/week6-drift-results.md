@@ -9,7 +9,7 @@
 
 **Overall Diagnosis Drift Rate: 28.2%** (n=994)
 
-This is the final number, computed against the current pure-API pipeline (post manual-mode removal, see `docs/status-report.md`) and the current Week 5 baseline. It supersedes an earlier provisional run (27.0%, n=960) — the two are close (within normal run-to-run variance), which is itself a useful consistency check that the number is real and not an artifact of a specific run.
+This is the final number, computed against the current pure-API pipeline and the current Week 5 baseline. It supersedes an earlier provisional run (27.0%, n=960) — the two are close (within normal run-to-run variance), which is itself a useful consistency check that the number is real and not an artifact of a specific run.
 
 Answers the question this was built to answer: when Claude has already correctly diagnosed a case, **it abandons that correct diagnosis about 3 in 10 times** after a single misleading follow-up note, even when nothing in the original evidence changed.
 
