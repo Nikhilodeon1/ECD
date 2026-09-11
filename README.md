@@ -25,6 +25,7 @@ python build_dataset.py --medqa-split test \
   --discharge <discharge.csv.gz> \
   --diagnoses-icd <diagnoses_icd.csv.gz> --d-icd <d_icd_diagnoses.csv.gz>
 python subsample.py                 # fixed stratified eval sample
+python stats.py                     # aggregate dataset stats (optional)
 python eval_baseline.py             # baseline accuracy (Claude API)
 python eval_drift.py                # adversarial injection + drift (Claude API)
 python gating_network.py            # drift-risk classifier (CPU)
@@ -35,14 +36,19 @@ python week9_significance.py        # all significance tests -> significance_rep
 `eval_baseline.py`, `eval_drift.py`, and `ecd_tradeoff.py` write results
 incrementally and resume on rerun.
 
+`notebooks/week6-drift-analysis.ipynb` reads the same result files for a
+quick look at drift rate by category and source; not part of the pipeline.
+
 ## Layout
 
 | Path | |
 |---|---|
 | `src/schema.py`, `*_loader.py`, `build_dataset.py`, `subsample.py` | data pipeline |
+| `src/stats.py` | aggregate dataset stats |
 | `src/prompts.py`, `grade.py`, `llm_clients.py` | prompting + LLM-as-judge |
 | `src/adversarial_notes.py` | taxonomy definitions + note generation |
 | `src/eval_baseline.py`, `eval_drift.py` | main benchmark |
 | `src/ecd_decode.py` | the ECD algorithm (run directly for the self-test) |
 | `src/ecd_tradeoff.py`, `ecd_demo.py`, `gating_network.py` | ECD evaluation |
 | `src/significance.py`, `week9_significance.py` | statistics |
+| `notebooks/` | ad-hoc result analysis, not part of the pipeline |
