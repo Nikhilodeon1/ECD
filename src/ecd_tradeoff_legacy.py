@@ -1,4 +1,7 @@
-"""ECD accuracy-drift tradeoff: sweep alpha over drifted cases (Llama-Med +
+"""LEGACY -- SIGN ERROR, DO NOT RUN OR REPORT. See docs/erratum.md.
+Superseded by ecd_v2.py.
+
+ECD accuracy-drift tradeoff: sweep alpha over drifted cases (Llama-Med +
 ECD), grade recovery via Claude judge. GPU required; only judge calls hit
 the API. Clean-case accuracy measured once (alpha-invariant when there is
 no adversarial note: full context == original context).
@@ -84,7 +87,7 @@ def measure_clean_accuracy(clean_cases: list[dict], llama_client, judge_client, 
                 continue
             prompt = build_llama_baseline_prompt(c["original_note"])
             try:
-                raw = llama_client.generate_ecd(prompt, prompt, alpha=0.0, max_tokens=200)
+                raw = llama_client.generate_ecd_legacy(prompt, prompt, alpha=0.0, max_tokens=200)
                 predicted = parse_llama_diagnosis(raw)
                 correct = grade_match(judge_client, c["diagnosis_ground_truth"], predicted)
             except Exception as e:
@@ -133,7 +136,7 @@ def sweep_drift_recovery(
                 if (case["case_id"], alpha) in already_done:
                     continue
                 try:
-                    raw = llama_client.generate_ecd(
+                    raw = llama_client.generate_ecd_legacy(
                         original_prompt, full_prompt, alpha=alpha, max_tokens=200
                     )
                     predicted = parse_llama_diagnosis(raw)

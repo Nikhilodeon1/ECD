@@ -1,0 +1,31 @@
+{
+  "script": "src/power_check.py",
+  "timestamp": "2026-10-06T23:50:16",
+  "reference": "Connor RJ (1987) Sample size for testing differences in proportions for the paired-sample design. Biometrics 43:207-211",
+  "alpha": 0.05,
+  "target_power": 0.8,
+  "scenarios": {
+    "S1 one-directional, delta=0.077 (category best case)": {
+      "p10": 0.077,
+      "p01": 0.0,
+      "connor_n": 99.5,
+      "exact_power_at_connor_n": 0.792,
+      "smallest_n_for_80pct_exact_power": 102
+    },
+    "S2 one-directional, delta=0.056 (small-effect best case)": {
+      "p10": 0.056,
+      "p01": 0.0,
+      "connor_n": 137.8,
+      "exact_power_at_connor_n": 0.792,
+      "smallest_n_for_80pct_exact_power": 141
+    },
+    "S3 bidirectional, delta=0.077, psi=0.263": {
+      "p10": 0.17,
+      "p01": 0.093,
+      "connor_n": 345.8,
+      "exact_power_at_connor_n": 0.776,
+      "smallest_n_for_80pct_exact_power": 368
+    }
+  },
+  "verdict": "Connor's formula reaches >= 0.75 exact power in every scenario"
+}

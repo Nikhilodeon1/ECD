@@ -37,12 +37,12 @@ if __name__ == "__main__":
     parser.add_argument("--drift-results", default="../data/processed/drift_results_claude.jsonl")
     parser.add_argument("--sample", default="../data/processed/eval_sample.jsonl")
     parser.add_argument("--n", type=int, default=5)
-    parser.add_argument("--alphas", default="1,2", help="comma-separated nonzero alpha values to test")
+    parser.add_argument("--betas", default="0.5,1", help="comma-separated beta values (0 = undefended, 1 = ignore the note)")
     parser.add_argument("--model-name", default="aaditya/Llama3-OpenBioLLM-8B")
     parser.add_argument("--source", default=None, choices=["medqa", "mimic-iv-note"])
     args = parser.parse_args()
 
-    alphas = [float(a) for a in args.alphas.split(",")]
+    betas = [float(b) for b in args.betas.split(",")]
     cases = load_drifted_cases(args.drift_results, args.sample, args.n, args.source)
     print(f"testing ECD on {len(cases)} cases that drifted under Claude")
 
@@ -58,10 +58,10 @@ if __name__ == "__main__":
         full_prompt = build_llama_followup_prompt(c["original_note"], c["adversarial_note"])
 
         plain = parse_llama_diagnosis(client.generate(full_prompt, max_tokens=200))
-        print(f"Llama-Med plain (alpha=0, no defense): {plain}")
+        print(f"Llama-Med plain (beta=0, no defense): {plain}")
 
-        for alpha in alphas:
+        for beta in betas:
             ecd_out = parse_llama_diagnosis(
-                client.generate_ecd(original_prompt, full_prompt, alpha=alpha, max_tokens=200)
+                client.generate_ecd(original_prompt, full_prompt, beta=beta, max_tokens=200)
             )
-            print(f"Llama-Med ECD alpha={alpha}: {ecd_out}")
+            print(f"Llama-Med ECD beta={beta}: {ecd_out}")
