@@ -12,6 +12,7 @@ Rubrics:
 """
 import json
 import re
+import threading
 import time
 import unicodedata
 from pathlib import Path
@@ -60,6 +61,7 @@ class JudgeCache:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.store: dict[tuple, dict] = {}
+        self._lock = threading.Lock()
         if self.path.exists():
             with self.path.open(encoding="utf-8") as f:
                 for line in f:

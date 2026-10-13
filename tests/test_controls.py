@@ -54,7 +54,7 @@ def test_controls_pipeline():
 
     class A:  # argparse stand-in
         sample = f"{_TMP}/eval_sample.jsonl"; baseline = f"{_TMP}/eval_results_claude.jsonl"
-        drift = f"{_TMP}/drift_results_claude.jsonl"; dry_run = False; limit = 0
+        drift = f"{_TMP}/drift_results_claude.jsonl"; dry_run = False; limit = 0; workers = 2
 
     client = FakeClaude()
     judge = controls.Judge(client, "fake", f"{_TMP}/jc.jsonl")

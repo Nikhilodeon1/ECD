@@ -7,6 +7,7 @@ sending MIMIC text to a cloud API).
 LlamaMedClient: local GPU inference, used for ECD (needs raw logit access).
 """
 import os
+import threading
 from abc import ABC, abstractmethod
 
 from dotenv import load_dotenv
@@ -34,6 +35,7 @@ class AnthropicClient(LLMClient):
         self.client = anthropic.Anthropic(api_key=api_key)
         self.model = model
         # run-config bookkeeping only; request parameters are unchanged
+        self._lock = threading.Lock()
         self.meta = {"requested_model": model, "response_models": {}, "n_calls": 0,
                      "input_tokens": 0, "output_tokens": 0}
 
@@ -53,13 +55,14 @@ class AnthropicClient(LLMClient):
         raise RuntimeError(f"no text block in response: {resp.content}")
 
     def _record(self, resp) -> None:
-        m = self.meta
-        m["n_calls"] += 1
-        m["response_models"][resp.model] = m["response_models"].get(resp.model, 0) + 1
-        usage = getattr(resp, "usage", None)
-        if usage is not None:
-            m["input_tokens"] += getattr(usage, "input_tokens", 0) or 0
-            m["output_tokens"] += getattr(usage, "output_tokens", 0) or 0
+        with self._lock:
+            m = self.meta
+            m["n_calls"] += 1
+            m["response_models"][resp.model] = m["response_models"].get(resp.model, 0) + 1
+            usage = getattr(resp, "usage", None)
+            if usage is not None:
+                m["input_tokens"] += getattr(usage, "input_tokens", 0) or 0
+                m["output_tokens"] += getattr(usage, "output_tokens", 0) or 0
 
     def dump_meta(self, path: str) -> None:
         """Append this run's call/model/token counts (no text) to a JSONL manifest."""

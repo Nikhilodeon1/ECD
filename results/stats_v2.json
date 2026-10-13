@@ -1,0 +1,350 @@
+{
+  "script": "src/stats_v2.py",
+  "timestamp": "2026-10-10T23:37:29",
+  "B": 10000,
+  "sources_present": [
+    "medqa",
+    "mimic-iv-note"
+  ],
+  "n_trials": 880,
+  "n_cases": 176,
+  "drift_rate_overall": {
+    "rate": 0.2932,
+    "ci_95": [
+      0.25,
+      0.3364
+    ],
+    "n_trials": 880,
+    "n_cases": 176
+  },
+  "drift_rate_by_source": {
+    "medqa": {
+      "rate": 0.1767,
+      "ci_95": [
+        0.134,
+        0.2214
+      ],
+      "n_trials": 515,
+      "n_cases": 103
+    },
+    "mimic-iv-note": {
+      "rate": 0.4575,
+      "ci_95": [
+        0.3918,
+        0.526
+      ],
+      "n_trials": 365,
+      "n_cases": 73
+    }
+  },
+  "drift_rate_by_category": {
+    "ISO": {
+      "rate": 0.2784,
+      "ci_95": [
+        0.2159,
+        0.3466
+      ],
+      "n_trials": 176,
+      "n_cases": 176
+    },
+    "MMS": {
+      "rate": 0.2614,
+      "ci_95": [
+        0.1989,
+        0.3295
+      ],
+      "n_trials": 176,
+      "n_cases": 176
+    },
+    "PLV": {
+      "rate": 0.3636,
+      "ci_95": [
+        0.2955,
+        0.4375
+      ],
+      "n_trials": 176,
+      "n_cases": 176
+    },
+    "SNHR": {
+      "rate": 0.2784,
+      "ci_95": [
+        0.2159,
+        0.3466
+      ],
+      "n_trials": 176,
+      "n_cases": 176
+    },
+    "VCS": {
+      "rate": 0.2841,
+      "ci_95": [
+        0.2216,
+        0.3523
+      ],
+      "n_trials": 176,
+      "n_cases": 176
+    }
+  },
+  "drift_rate_by_source_and_category": {
+    "medqa|ISO": {
+      "rate": 0.165,
+      "ci_95": [
+        0.0971,
+        0.2427
+      ],
+      "n_trials": 103,
+      "n_cases": 103
+    },
+    "medqa|MMS": {
+      "rate": 0.0874,
+      "ci_95": [
+        0.0388,
+        0.1456
+      ],
+      "n_trials": 103,
+      "n_cases": 103
+    },
+    "medqa|PLV": {
+      "rate": 0.3398,
+      "ci_95": [
+        0.2524,
+        0.4369
+      ],
+      "n_trials": 103,
+      "n_cases": 103
+    },
+    "medqa|SNHR": {
+      "rate": 0.1845,
+      "ci_95": [
+        0.1165,
+        0.2621
+      ],
+      "n_trials": 103,
+      "n_cases": 103
+    },
+    "medqa|VCS": {
+      "rate": 0.1068,
+      "ci_95": [
+        0.0485,
+        0.1748
+      ],
+      "n_trials": 103,
+      "n_cases": 103
+    },
+    "mimic-iv-note|ISO": {
+      "rate": 0.4384,
+      "ci_95": [
+        0.3288,
+        0.5479
+      ],
+      "n_trials": 73,
+      "n_cases": 73
+    },
+    "mimic-iv-note|MMS": {
+      "rate": 0.5068,
+      "ci_95": [
+        0.3973,
+        0.6164
+      ],
+      "n_trials": 73,
+      "n_cases": 73
+    },
+    "mimic-iv-note|PLV": {
+      "rate": 0.3973,
+      "ci_95": [
+        0.2877,
+        0.5068
+      ],
+      "n_trials": 73,
+      "n_cases": 73
+    },
+    "mimic-iv-note|SNHR": {
+      "rate": 0.411,
+      "ci_95": [
+        0.3014,
+        0.5205
+      ],
+      "n_trials": 73,
+      "n_cases": 73
+    },
+    "mimic-iv-note|VCS": {
+      "rate": 0.5342,
+      "ci_95": [
+        0.4247,
+        0.6438
+      ],
+      "n_trials": 73,
+      "n_cases": 73
+    }
+  },
+  "risk_difference_mimic_minus_medqa": {
+    "diff": 0.2808,
+    "ci_95": [
+      0.2016,
+      0.3597
+    ]
+  },
+  "drift_by_evidence_length_quartile_within_source": {
+    "medqa": {
+      "Q1 (37-90 words)": {
+        "rate": 0.1692,
+        "ci_95": [
+          0.0846,
+          0.2692
+        ],
+        "n_trials": 130,
+        "n_cases": 26
+      },
+      "Q2 (92-117 words)": {
+        "rate": 0.1846,
+        "ci_95": [
+          0.0923,
+          0.2769
+        ],
+        "n_trials": 130,
+        "n_cases": 26
+      },
+      "Q3 (118-147 words)": {
+        "rate": 0.1308,
+        "ci_95": [
+          0.0615,
+          0.2154
+        ],
+        "n_trials": 130,
+        "n_cases": 26
+      },
+      "Q4 (148-239 words)": {
+        "rate": 0.224,
+        "ci_95": [
+          0.144,
+          0.32
+        ],
+        "n_trials": 125,
+        "n_cases": 25
+      }
+    },
+    "mimic-iv-note": {
+      "Q1 (49-245 words)": {
+        "rate": 0.5053,
+        "ci_95": [
+          0.4,
+          0.6105
+        ],
+        "n_trials": 95,
+        "n_cases": 19
+      },
+      "Q2 (248-328 words)": {
+        "rate": 0.5222,
+        "ci_95": [
+          0.3667,
+          0.6778
+        ],
+        "n_trials": 90,
+        "n_cases": 18
+      },
+      "Q3 (330-499 words)": {
+        "rate": 0.3333,
+        "ci_95": [
+          0.2333,
+          0.4444
+        ],
+        "n_trials": 90,
+        "n_cases": 18
+      },
+      "Q4 (513-800 words)": {
+        "rate": 0.4667,
+        "ci_95": [
+          0.3111,
+          0.6111
+        ],
+        "n_trials": 90,
+        "n_cases": 18
+      }
+    }
+  },
+  "evidence_words_by_source": {
+    "medqa": {
+      "median": 117.0,
+      "iqr": [
+        91.0,
+        147.0
+      ]
+    },
+    "mimic-iv-note": {
+      "median": 328.0,
+      "iqr": [
+        245.0,
+        499.0
+      ]
+    }
+  },
+  "gee": {
+    "formula": "drifted ~ C(source, Treatment('medqa')) + C(category) + log_words",
+    "cov_struct": "exchangeable",
+    "n_trials": 880,
+    "n_cases": 176,
+    "coefficients": {
+      "C(source, Treatment('medqa'))[T.mimic-iv-note]": {
+        "odds_ratio": 4.961,
+        "ci_95": [
+          2.963,
+          8.307
+        ],
+        "p": 1.12044457465153e-09
+      },
+      "C(category)[T.MMS]": {
+        "odds_ratio": 0.909,
+        "ci_95": [
+          0.585,
+          1.414
+        ],
+        "p": 0.6728436193578864
+      },
+      "C(category)[T.PLV]": {
+        "odds_ratio": 1.546,
+        "ci_95": [
+          1.011,
+          2.364
+        ],
+        "p": 0.0446056359559191
+      },
+      "C(category)[T.SNHR]": {
+        "odds_ratio": 1.0,
+        "ci_95": [
+          0.635,
+          1.576
+        ],
+        "p": 0.9999999999999993
+      },
+      "C(category)[T.VCS]": {
+        "odds_ratio": 1.031,
+        "ci_95": [
+          0.67,
+          1.588
+        ],
+        "p": 0.8882360157116396
+      },
+      "log_words": {
+        "odds_ratio": 0.785,
+        "ci_95": [
+          0.539,
+          1.142
+        ],
+        "p": 0.20541285688469169
+      }
+    },
+    "category_joint_wald": {
+      "chi2": 7.031,
+      "df": 4,
+      "p": 0.13423945884053815
+    }
+  },
+  "source_gap_survives_length_adjustment": {
+    "survives": true,
+    "adjusted_odds_ratio_mimic_vs_medqa": 4.961,
+    "ci_95": [
+      2.963,
+      8.307
+    ],
+    "statement": "The MIMIC > MedQA drift gap persists after adjusting for category and log evidence length."
+  }
+}

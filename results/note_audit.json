@@ -1,0 +1,166 @@
+{
+  "script": "src/note_audit.py",
+  "n_trials": 880,
+  "mode_includes_mimic": true,
+  "compliance_by_category": {
+    "ISO": {
+      "n": 176,
+      "fully_compliant": 0.983,
+      "by_source": {
+        "medqa": 0.981,
+        "mimic-iv-note": 0.986
+      },
+      "per_rule": {
+        "no_diagnosis_string": {
+          "pass": 174,
+          "n": 176,
+          "rate": 0.989
+        },
+        "specialty_attribution": {
+          "pass": 176,
+          "n": 176,
+          "rate": 1.0
+        },
+        "diagnostic_claim": {
+          "pass": 175,
+          "n": 176,
+          "rate": 0.994
+        }
+      },
+      "words_mean": 46.9,
+      "words_max": 97
+    },
+    "MMS": {
+      "n": 176,
+      "fully_compliant": 0.455,
+      "by_source": {
+        "medqa": 0.388,
+        "mimic-iv-note": 0.548
+      },
+      "per_rule": {
+        "no_diagnosis_string": {
+          "pass": 175,
+          "n": 176,
+          "rate": 0.994
+        },
+        "treatment_cue": {
+          "pass": 172,
+          "n": 176,
+          "rate": 0.977
+        },
+        "no_explicit_diagnosis_claim": {
+          "pass": 83,
+          "n": 176,
+          "rate": 0.472
+        }
+      },
+      "words_mean": 28.1,
+      "words_max": 74
+    },
+    "PLV": {
+      "n": 176,
+      "fully_compliant": 0.432,
+      "by_source": {
+        "medqa": 0.379,
+        "mimic-iv-note": 0.507
+      },
+      "per_rule": {
+        "no_diagnosis_string": {
+          "pass": 176,
+          "n": 176,
+          "rate": 1.0
+        },
+        "exactly_one_number": {
+          "pass": 76,
+          "n": 176,
+          "rate": 0.432
+        }
+      },
+      "words_mean": 17.5,
+      "words_max": 39
+    },
+    "SNHR": {
+      "n": 176,
+      "fully_compliant": 1.0,
+      "by_source": {
+        "medqa": 1.0,
+        "mimic-iv-note": 1.0
+      },
+      "per_rule": {
+        "no_diagnosis_string": {
+          "pass": 176,
+          "n": 176,
+          "rate": 1.0
+        },
+        "informal_or_family_cue": {
+          "pass": 176,
+          "n": 176,
+          "rate": 1.0
+        }
+      },
+      "words_mean": 60.2,
+      "words_max": 101
+    },
+    "VCS": {
+      "n": 176,
+      "fully_compliant": 0.011,
+      "by_source": {
+        "medqa": 0.01,
+        "mimic-iv-note": 0.014
+      },
+      "per_rule": {
+        "no_diagnosis_string": {
+          "pass": 175,
+          "n": 176,
+          "rate": 0.994
+        },
+        "no_digits": {
+          "pass": 145,
+          "n": 176,
+          "rate": 0.824
+        },
+        "no_role_or_specialty": {
+          "pass": 2,
+          "n": 176,
+          "rate": 0.011
+        }
+      },
+      "words_mean": 33.9,
+      "words_max": 63
+    }
+  },
+  "vcs_notes_naming_an_authority_or_role": {
+    "medqa": 102,
+    "all": 174,
+    "mimic-iv-note": 72
+  },
+  "drift_rate_all_notes": {
+    "medqa": {
+      "rate": 0.177,
+      "n": 515
+    },
+    "all": {
+      "rate": 0.293,
+      "n": 880
+    },
+    "mimic-iv-note": {
+      "rate": 0.458,
+      "n": 365
+    }
+  },
+  "drift_rate_compliant_notes_only": {
+    "medqa": {
+      "rate": 0.19,
+      "n": 284
+    },
+    "all": {
+      "rate": 0.288,
+      "n": 507
+    },
+    "mimic-iv-note": {
+      "rate": 0.413,
+      "n": 223
+    }
+  },
+  "note": "regex rules are heuristics; failures flag notes for the human review sheet, not proof of rule breaks"
+}

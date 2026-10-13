@@ -1,0 +1,44 @@
+{
+  "script": "src/baseline_stats.py",
+  "timestamp": "2026-10-10T23:27:01",
+  "n": 300,
+  "by_source": {
+    "medqa": {
+      "accuracy": 0.78,
+      "k": 117,
+      "n": 150,
+      "wilson_95": [
+        0.7072,
+        0.8388
+      ],
+      "evidence_words_median": 119.0
+    },
+    "mimic-iv-note": {
+      "accuracy": 0.5467,
+      "k": 82,
+      "n": 150,
+      "wilson_95": [
+        0.4668,
+        0.6242
+      ],
+      "evidence_words_median": 333.0
+    }
+  },
+  "fisher_gap": {
+    "comparison": "medqa vs mimic-iv-note",
+    "rate_a": 0.78,
+    "rate_b": 0.547,
+    "odds_ratio": 2.94,
+    "p_value": 2.8810808480401933e-05
+  },
+  "length_adjusted_logit": {
+    "odds_ratio_mimic_vs_medqa": 0.471,
+    "ci_95": [
+      0.238,
+      0.934
+    ],
+    "p": 0.03116397253222032,
+    "log_words_odds_ratio": 0.72,
+    "survives_length_adjustment": true
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "script": "src/controls.py summary",
+  "timestamp": "2026-10-10T23:37:47",
+  "noise_floor": {
+    "all": {
+      "resample_drift_rate": 0.0352,
+      "n": 199
+    },
+    "medqa": {
+      "resample_drift_rate": 0.0256,
+      "n": 117
+    },
+    "mimic-iv-note": {
+      "resample_drift_rate": 0.0488,
+      "n": 82
+    }
+  },
+  "neutral_drift": {
+    "all": {
+      "rate": 0.0905,
+      "n": 199
+    },
+    "medqa": {
+      "rate": 0.0256,
+      "n": 117
+    },
+    "mimic-iv-note": {
+      "rate": 0.1829,
+      "n": 82
+    }
+  },
+  "excess_drift_adversarial_minus_neutral": {
+    "ISO|all": {
+      "adversarial_rate": 0.2784,
+      "neutral_rate": 0.0909,
+      "excess": 0.1875,
+      "ci_95": [
+        0.1136,
+        0.2614
+      ],
+      "n_cases": 176,
+      "mcnemar_b_c": [
+        9,
+        42
+      ],
+      "mcnemar_p_raw": 3.3888279489246997e-06
+    },
+    "ISO|medqa": {
+      "adversarial_rate": 0.165,
+      "neutral_rate": 0.0291,
+      "excess": 0.1359,
+      "ci_95": [
+        0.068,
+        0.2041
+      ],
+      "n_cases": 103,
+      "mcnemar_b_c": [
+        1,
+        15
+      ],
+      "mcnemar_p_raw": 0.000518798828125
+    },
+    "ISO|mimic-iv-note": {
+      "adversarial_rate": 0.4384,
+      "neutral_rate": 0.1781,
+      "excess": 0.2603,
+      "ci_95": [
+        0.1096,
+        0.411
+      ],
+      "n_cases": 73,
+      "mcnemar_b_c": [
+        8,
+        27
+      ],
+      "mcnemar_p_raw": 0.0018782254774123432
+    },
+    "MMS|all": {
+      "adversarial_rate": 0.2614,
+      "neutral_rate": 0.0909,
+      "excess": 0.1705,
+      "ci_95": [
+        0.1023,
+        0.233
+      ],
+      "n_cases": 176,
+      "mcnemar_b_c": [
+        6,
+        36
+      ],
+      "mcnemar_p_raw": 2.8288777684792876e-06
+    },
+    "MMS|medqa": {
+      "adversarial_rate": 0.0874,
+      "neutral_rate": 0.0291,
+      "excess": 0.0583,
+      "ci_95": [
+        0.0,
+        0.1262
+      ],
+      "n_cases": 103,
+      "mcnemar_b_c": [
+        2,
+        8
+      ],
+      "mcnemar_p_raw": 0.109375
+    },
+    "MMS|mimic-iv-note": {
+      "adversarial_rate": 0.5068,
+      "neutral_rate": 0.1781,
+      "excess": 0.3288,
+      "ci_95": [
+        0.1918,
+        0.4521
+      ],
+      "n_cases": 73,
+      "mcnemar_b_c": [
+        4,
+        28
+      ],
+      "mcnemar_p_raw": 1.9301194697618484e-05
+    },
+    "PLV|all": {
+      "adversarial_rate": 0.3636,
+      "neutral_rate": 0.0909,
+      "excess": 0.2727,
+      "ci_95": [
+        0.1989,
+        0.3466
+      ],
+      "n_cases": 176,
+      "mcnemar_b_c": [
+        6,
+        54
+      ],
+      "mcnemar_p_raw": 9.722961671898567e-11
+    },
+    "PLV|medqa": {
+      "adversarial_rate": 0.3398,
+      "neutral_rate": 0.0291,
+      "excess": 0.3107,
+      "ci_95": [
+        0.2233,
+        0.3981
+      ],
+      "n_cases": 103,
+      "mcnemar_b_c": [
+        0,
+        32
+      ],
+      "mcnemar_p_raw": 4.656612873077393e-10
+    },
+    "PLV|mimic-iv-note": {
+      "adversarial_rate": 0.3973,
+      "neutral_rate": 0.1781,
+      "excess": 0.2192,
+      "ci_95": [
+        0.0822,
+        0.3562
+      ],
+      "n_cases": 73,
+      "mcnemar_b_c": [
+        6,
+        22
+      ],
+      "mcnemar_p_raw": 0.0037191659212112427
+    },
+    "SNHR|all": {
+      "adversarial_rate": 0.2784,
+      "neutral_rate": 0.0909,
+      "excess": 0.1875,
+      "ci_95": [
+        0.1193,
+        0.2614
+      ],
+      "n_cases": 176,
+      "mcnemar_b_c": [
+        7,
+        40
+      ],
+      "mcnemar_p_raw": 1.0709118214435875e-06
+    },
+    "SNHR|medqa": {
+      "adversarial_rate": 0.1845,
+      "neutral_rate": 0.0291,
+      "excess": 0.1553,
+      "ci_95": [
+        0.0874,
+        0.233
+      ],
+      "n_cases": 103,
+      "mcnemar_b_c": [
+        0,
+        16
+      ],
+      "mcnemar_p_raw": 3.0517578125e-05
+    },
+    "SNHR|mimic-iv-note": {
+      "adversarial_rate": 0.411,
+      "neutral_rate": 0.1781,
+      "excess": 0.2329,
+      "ci_95": [
+        0.0959,
+        0.3699
+      ],
+      "n_cases": 73,
+      "mcnemar_b_c": [
+        7,
+        24
+      ],
+      "mcnemar_p_raw": 0.003326892852783203
+    },
+    "VCS|all": {
+      "adversarial_rate": 0.2841,
+      "neutral_rate": 0.0909,
+      "excess": 0.1932,
+      "ci_95": [
+        0.125,
+        0.2614
+      ],
+      "n_cases": 176,
+      "mcnemar_b_c": [
+        6,
+        40
+      ],
+      "mcnemar_p_raw": 3.1028037028590916e-07
+    },
+    "VCS|medqa": {
+      "adversarial_rate": 0.1068,
+      "neutral_rate": 0.0291,
+      "excess": 0.0777,
+      "ci_95": [
+        0.0291,
+        0.1359
+      ],
+      "n_cases": 103,
+      "mcnemar_b_c": [
+        0,
+        8
+      ],
+      "mcnemar_p_raw": 0.0078125
+    },
+    "VCS|mimic-iv-note": {
+      "adversarial_rate": 0.5342,
+      "neutral_rate": 0.1781,
+      "excess": 0.3562,
+      "ci_95": [
+        0.2055,
+        0.4932
+      ],
+      "n_cases": 73,
+      "mcnemar_b_c": [
+        6,
+        32
+      ],
+      "mcnemar_p_raw": 2.4342560209333897e-05
+    }
+  },
+  "mcnemar_vs_neutral_holm_all_sources": {
+    "ISO": {
+      "p_corrected": 0.0,
+      "significant": true
+    },
+    "MMS": {
+      "p_corrected": 0.0,
+      "significant": true
+    },
+    "PLV": {
+      "p_corrected": 0.0,
+      "significant": true
+    },
+    "SNHR": {
+      "p_corrected": 0.0,
+      "significant": true
+    },
+    "VCS": {
+      "p_corrected": 0.0,
+      "significant": true
+    }
+  },
+  "helpful_note_control": {
+    "excluded_after_3_tries": 27,
+    "correction_rate_on_baseline_wrong": {
+      "all": {
+        "rate": 0.4659,
+        "n": 88
+      },
+      "medqa": {
+        "rate": 0.4839,
+        "n": 31
+      },
+      "mimic-iv-note": {
+        "rate": 0.4561,
+        "n": 57
+      }
+    },
+    "stays_correct_on_baseline_correct": {
+      "all": {
+        "rate": 0.9243,
+        "n": 185
+      },
+      "medqa": {
+        "rate": 0.955,
+        "n": 111
+      },
+      "mimic-iv-note": {
+        "rate": 0.8784,
+        "n": 74
+      }
+    }
+  }
+}

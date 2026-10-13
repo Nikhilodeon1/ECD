@@ -22,6 +22,7 @@ import re
 import time
 
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from judge import Judge, normalize
 from llm_clients import AnthropicClient
@@ -74,19 +75,35 @@ def done_ids(path) -> set[str]:
     return {r["case_id"] for r in read_jsonl(path, guard=False)} if path.exists() else set()
 
 
+def run_parallel(todo, work, out_path, label, workers):
+    """work(cid) -> row dict or None. Rows are written by this (main) thread only."""
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as ex:
+        futs = {ex.submit(work, cid): cid for cid in todo}
+        for i, fut in enumerate(as_completed(futs), 1):
+            try:
+                row = fut.result()
+            except Exception as e:  # one failed case must not stop the run; it is retried on rerun
+                print(f"[{label} {i}/{len(todo)}] {futs[fut]} failed: {e}")
+                continue
+            if row:
+                append_jsonl(out_path, row)
+                print(f"[{label} {i}/{len(todo)}] {row['case_id']}")
+
+
 def run_noise(args, client, judge):
     sample, base = load_inputs(args)
     todo = [cid for cid, r in base.items() if r["correct"] and cid not in done_ids(OUT["noise"])]
     if args.dry_run:
         print(f"noise: {len(todo)} cases to run = {len(todo)} generations + <= {len(todo)} judge calls"); return
-    for i, cid in enumerate(todo[: args.limit] if args.limit else todo):
+    def work(cid):
         raw = client.generate(build_baseline_prompt(sample[cid]["original_note"]))
         new = parse_diagnosis(raw)
         v = judge.compare("noise", cid, base[cid]["predicted"], new, kind="same")
-        append_jsonl(OUT["noise"], {"case_id": cid, "source": sample[cid]["source"], "diagnosis_before": base[cid]["predicted"],
-                                    "diagnosis_resampled": new, "resample_drift": not v["match"],
-                                    "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
-        print(f"[noise {i + 1}/{len(todo)}] {cid} drift={not v['match']}")
+        return {"case_id": cid, "source": sample[cid]["source"], "diagnosis_before": base[cid]["predicted"],
+                "diagnosis_resampled": new, "resample_drift": not v["match"],
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")}
+
+    run_parallel(todo[: args.limit] if args.limit else todo, work, OUT["noise"], "noise", args.workers)
 
 
 def run_neutral(args, client, judge):
@@ -94,14 +111,15 @@ def run_neutral(args, client, judge):
     todo = [cid for cid, r in base.items() if r["correct"] and cid not in done_ids(OUT["neutral"])]
     if args.dry_run:
         print(f"neutral: {len(todo)} cases = {len(todo)} follow-ups + <= {len(todo)} judge calls"); return
-    for i, cid in enumerate(todo[: args.limit] if args.limit else todo):
+    def work(cid):
         note = neutral_for(cid)
         new = parse_diagnosis(client.generate(build_followup_prompt(sample[cid]["original_note"], note), max_tokens=300))
         v = judge.compare("neutral", cid, base[cid]["predicted"], new, kind="same")
-        append_jsonl(OUT["neutral"], {"case_id": cid, "source": sample[cid]["source"], "neutral_note": note,
-                                      "diagnosis_before": base[cid]["predicted"], "diagnosis_after": new,
-                                      "neutral_drift": not v["match"], "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
-        print(f"[neutral {i + 1}/{len(todo)}] {cid} drift={not v['match']}")
+        return {"case_id": cid, "source": sample[cid]["source"], "neutral_note": note,
+                "diagnosis_before": base[cid]["predicted"], "diagnosis_after": new,
+                "neutral_drift": not v["match"], "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")}
+
+    run_parallel(todo[: args.limit] if args.limit else todo, work, OUT["neutral"], "neutral", args.workers)
 
 
 def run_helpful(args, client, judge):
@@ -109,7 +127,7 @@ def run_helpful(args, client, judge):
     todo = [cid for cid in base if cid not in done_ids(OUT["helpful"])]
     if args.dry_run:
         print(f"helpful: {len(todo)} cases = ~{int(len(todo) * 1.2)} note gens + {len(todo)} follow-ups + {len(todo)} judge calls"); return
-    for i, cid in enumerate(todo[: args.limit] if args.limit else todo):
+    def work(cid):
         c = sample[cid]
         note, tries = None, 0
         for tries in range(1, 4):  # first try + up to 2 regenerations
@@ -126,8 +144,9 @@ def run_helpful(args, client, judge):
             v = judge.compare("helpful", cid, c["diagnosis_ground_truth"], new, kind="grade")
             row.update({"excluded": False, "helpful_note": note, "diagnosis_after": new, "correct_after": bool(v["match"])})
         row["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%S")
-        append_jsonl(OUT["helpful"], row)
-        print(f"[helpful {i + 1}/{len(todo)}] {cid} excluded={row['excluded']}")
+        return row
+
+    run_parallel(todo[: args.limit] if args.limit else todo, work, OUT["helpful"], "helpful", args.workers)
 
 
 # ---------------------------------------------------------------- summary (e)
@@ -206,6 +225,7 @@ if __name__ == "__main__":
     ap.add_argument("--judge-cache", default=str(DATA / "judge_cache_claude.jsonl"))
     ap.add_argument("--dry-run", action="store_true", help="print the number of paid calls, make none")
     ap.add_argument("--limit", type=int, default=0, help="stop after N cases (pilot: use 20)")
+    ap.add_argument("--workers", type=int, default=1, help="parallel cases (request parameters unchanged)")
     args = ap.parse_args()
 
     if args.task == "summary":

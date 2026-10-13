@@ -12,7 +12,9 @@ Phases (each writes incrementally and resumes):
   prompt      baseline P on D and H           <- needs the prereg committed
   summarize   R, S, accuracy-on-helpful, decision rule, plot
 
-Judging is Claude binary_v1 through the verdict cache. Outputs hold MIMIC-derived
+Judging uses the binary_v1 rubric through the verdict cache: the open-weight judge by
+default (free, same GPU; validated against Claude by judge_validation.py), or Claude with
+--judge-backend claude. Outputs hold MIMIC-derived
 text when ECD_ALLOW_MIMIC=1, so they stay under data/; aggregates go to results/.
 """
 import argparse
@@ -306,7 +308,10 @@ if __name__ == "__main__":
     ap.add_argument("--model-name", default="aaditya/Llama3-OpenBioLLM-8B")
     ap.add_argument("--sample", default=str(DATA / "eval_sample.jsonl"))
     ap.add_argument("--drift", default=str(DATA / "drift_results_claude.jsonl"))
-    ap.add_argument("--judge-cache", default=str(DATA / "judge_cache_claude.jsonl"))
+    ap.add_argument("--judge-backend", choices=["open", "claude"], default="open",
+                    help="open: free open-weight judge on the same GPU (default, see docs/prereg-v2.md); claude: paid")
+    ap.add_argument("--judge-model", default="Qwen/Qwen2.5-7B-Instruct")
+    ap.add_argument("--judge-cache", default=None)
     ap.add_argument("--max-tokens", type=int, default=200)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--B", type=int, default=10000)
@@ -317,11 +322,15 @@ if __name__ == "__main__":
     if a.phase in ("freeze-D", "freeze-H", "summarize"):
         {"freeze-D": phase_freeze_D, "freeze-H": phase_freeze_H, "summarize": phase_summarize}[a.phase](a)
     else:
-        from llm_clients import AnthropicClient, LlamaMedClient
+        from llm_clients import AnthropicClient, LlamaMedClient, OpenJudgeClient
 
         sample, drift = read_jsonl(a.sample), read_jsonl(a.drift)
         client = LlamaMedClient(model_name=a.model_name)
-        judge = Judge(AnthropicClient(), "claude-binary", a.judge_cache)
+        if a.judge_backend == "claude":
+            judge = Judge(AnthropicClient(), "claude-binary", a.judge_cache or str(DATA / "judge_cache_claude.jsonl"))
+        else:
+            jid = a.judge_model.split("/")[-1]
+            judge = Judge(OpenJudgeClient(a.judge_model), jid, a.judge_cache or str(DATA / f"judge_cache_{jid}.jsonl"))
         if a.phase == "baseline":
             phase_baseline(a, client, judge, sample)
         elif a.phase == "undefended":

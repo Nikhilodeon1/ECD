@@ -31,3 +31,6 @@ Thumbs.db
 
 docs/
 ecd_template/
+ecd_private_bundle.tgz
+ecd_public_medqa.tgz
+*.tgz

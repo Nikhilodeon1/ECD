@@ -8,6 +8,7 @@ rerun (keyed by case_id, category).
 import argparse
 import json
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from adversarial_notes import CATEGORY_DEFINITIONS, build_generate_note_prompt
@@ -48,7 +49,7 @@ def load_existing_trials(out_path: str) -> tuple[set[tuple[str, str]], list[dict
     return done, results
 
 
-def run_drift_eval(correct_cases: list[dict], client, out_path: str) -> list[dict]:
+def run_drift_eval(correct_cases: list[dict], client, out_path: str, workers: int = 1) -> list[dict]:
     categories = list(CATEGORY_DEFINITIONS.keys())
     already_done, results = load_existing_trials(out_path)
     if already_done:
@@ -57,44 +58,47 @@ def run_drift_eval(correct_cases: list[dict], client, out_path: str) -> list[dic
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    total = len(correct_cases) * len(categories)
-    i = 0
-    with out.open("a", encoding="utf-8") as f:
-        for case in correct_cases:
-            for category in categories:
-                i += 1
-                if (case["id"], category) in already_done:
-                    continue
-                try:
-                    note_prompt = build_generate_note_prompt(
-                        case["original_note"], case["baseline_diagnosis"], category
-                    )
-                    adversarial_note = client.generate(note_prompt, max_tokens=200).strip()
+    jobs = [(c, cat) for c in correct_cases for cat in categories if (c["id"], cat) not in already_done]
+    total = len(jobs)
 
-                    followup_prompt = build_followup_prompt(case["original_note"], adversarial_note)
-                    raw_after = client.generate(followup_prompt, max_tokens=300)
-                    diagnosis_after = parse_diagnosis(raw_after)
+    def work(job):
+        case, category = job
+        try:
+            note_prompt = build_generate_note_prompt(case["original_note"], case["baseline_diagnosis"], category)
+            adversarial_note = client.generate(note_prompt, max_tokens=200).strip()
 
-                    drift_prompt = build_drift_check_prompt(case["baseline_diagnosis"], diagnosis_after)
-                    drift_raw = client.generate(drift_prompt, max_tokens=250)
-                    drifted = not parse_verdict(drift_raw)
-                except Exception as e:
-                    print(f"[{i}/{total}] {case['id']} / {category} failed: {e}")
-                    continue
+            followup_prompt = build_followup_prompt(case["original_note"], adversarial_note)
+            raw_after = client.generate(followup_prompt, max_tokens=300)
+            diagnosis_after = parse_diagnosis(raw_after)
 
-                result = {
-                    "case_id": case["id"],
-                    "source": case["source"],
-                    "category": category,
-                    "diagnosis_before": case["baseline_diagnosis"],
-                    "adversarial_note": adversarial_note,
-                    "diagnosis_after": diagnosis_after,
-                    "drifted": drifted,
-                }
-                results.append(result)
-                f.write(json.dumps(result) + "\n")
-                f.flush()
-                print(f"[{i}/{total}] {case['id']} / {category} drifted={drifted}")
+            drift_prompt = build_drift_check_prompt(case["baseline_diagnosis"], diagnosis_after)
+            drift_raw = client.generate(drift_prompt, max_tokens=250)
+            drifted = not parse_verdict(drift_raw)
+        except Exception as e:
+            print(f"{case['id']} / {category} failed: {e}")
+            return None
+        return {
+            "case_id": case["id"],
+            "source": case["source"],
+            "category": category,
+            "diagnosis_before": case["baseline_diagnosis"],
+            "adversarial_note": adversarial_note,
+            "diagnosis_after": diagnosis_after,
+            "drifted": drifted,
+        }
+
+    # file writes happen only in this (main) thread, one trial at a time, so a
+    # crash or exhausted budget loses nothing already finished
+    with out.open("a", encoding="utf-8") as f, ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = [ex.submit(work, j) for j in jobs]
+        for i, fut in enumerate(as_completed(futures), 1):
+            result = fut.result()
+            if result is None:
+                continue
+            results.append(result)
+            f.write(json.dumps(result) + "\n")
+            f.flush()
+            print(f"[{i}/{total}] {result['case_id']} / {result['category']} drifted={result['drifted']}")
 
     return results
 
@@ -128,16 +132,31 @@ if __name__ == "__main__":
     parser.add_argument("--baseline-results", default="../data/processed/eval_results_claude.jsonl")
     parser.add_argument("--sample", default="../data/processed/eval_sample.jsonl")
     parser.add_argument("--out", default="../data/processed/drift_results_claude.jsonl")
+    parser.add_argument("--dry-run", action="store_true", help="print the paid calls still to make, make none")
+    parser.add_argument("--workers", type=int, default=1, help="parallel trials (request parameters unchanged)")
+    parser.add_argument("--source", choices=["medqa", "mimic-iv-note"], default=None)
+    parser.add_argument("--limit-cases", type=int, default=0, help="pilot: only the first N cases")
     args = parser.parse_args()
 
     correct_cases = load_baseline_correct(args.baseline_results, args.sample)
+    if args.source:
+        correct_cases = [c for c in correct_cases if c["source"] == args.source]
+    if args.limit_cases:
+        correct_cases = correct_cases[: args.limit_cases]
     print(
         f"{len(correct_cases)} baseline-correct cases x 5 categories "
         f"= {len(correct_cases) * 5} drift trials"
     )
 
+    if args.dry_run:
+        done, _ = load_existing_trials(args.out)
+        left = len(correct_cases) * 5 - len(done)
+        print(f"dry run: {left} trials left = {left} note generations + {left} follow-ups + {left} judge calls ({3 * left} paid calls)")
+        raise SystemExit(0)
+
     client = AnthropicClient()
-    results = run_drift_eval(correct_cases, client, args.out)
+    results = run_drift_eval(correct_cases, client, args.out, workers=args.workers)
+    client.dump_meta("../results/api_manifest.jsonl")
 
     table = drift_rate_table(results)
     print(json.dumps(table, indent=2))
