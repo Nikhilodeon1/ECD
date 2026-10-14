@@ -197,6 +197,26 @@ def summarize(args):
         out["excess_drift_adversarial_minus_neutral"] = excess
         if pvals:
             out["mcnemar_vs_neutral_holm_all_sources"] = holm_bonferroni(pvals)
+        # pooled over the five categories: per-case mean adversarial drift minus the case's neutral drift
+        per_case = {}
+        for t in drift:
+            per_case.setdefault(t["case_id"], {"src": t["source"], "d": []})["d"].append(int(t["drifted"]))
+        pooled, arrs = {}, {}
+        rng = np.random.default_rng(42)
+        for scope in sorted({v["src"] for v in per_case.values()}):
+            ids = [c for c, v in per_case.items() if v["src"] == scope and c in neu]
+            ex_i = np.array([np.mean(per_case[c]["d"]) - int(neu[c]["neutral_drift"]) for c in ids])
+            arrs[scope] = ex_i
+            bs = [ex_i[rng.integers(0, len(ex_i), len(ex_i))].mean() for _ in range(10000)]
+            pooled[scope] = {"excess": round(float(ex_i.mean()), 4), "ci_95": [round(float(np.percentile(bs, 2.5)), 4), round(float(np.percentile(bs, 97.5)), 4)],
+                             "adversarial_rate": round(float(np.mean([np.mean(per_case[c]["d"]) for c in ids])), 4),
+                             "neutral_rate": round(float(np.mean([int(neu[c]["neutral_drift"]) for c in ids])), 4), "n_cases": len(ids)}
+        if len(arrs) == 2:
+            a_, b_ = sorted(arrs)
+            diffs = [arrs[b_][rng.integers(0, len(arrs[b_]), len(arrs[b_]))].mean() - arrs[a_][rng.integers(0, len(arrs[a_]), len(arrs[a_]))].mean() for _ in range(10000)]
+            pooled["gap_" + b_ + "_minus_" + a_] = {"diff": round(float(arrs[b_].mean() - arrs[a_].mean()), 4),
+                                                    "ci_95": [round(float(np.percentile(diffs, 2.5)), 4), round(float(np.percentile(diffs, 97.5)), 4)]}
+        out["excess_drift_pooled_by_source"] = pooled
         weak = [k for k, v in excess.items() if k.endswith("|all") and v["ci_95"][0] <= 0]
         if weak:
             out["WARNING"] = (f"excess drift over the neutral control has a CI including 0 for: {weak}. "

@@ -79,8 +79,11 @@ class LlamaMedClient(LLMClient):
 
     name = "llama-med"
 
-    def __init__(self, model_name: str = "aaditya/Llama3-OpenBioLLM-8B", device: str = "cuda", dtype: str = "auto"):
+    def __init__(self, model_name: str = "aaditya/Llama3-OpenBioLLM-8B", device: str = "auto", dtype: str = "auto"):
         import torch
+
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
         self.device = device
@@ -88,7 +91,7 @@ class LlamaMedClient(LLMClient):
         if dtype == "auto":
             # V100 (sm70) has no native bf16; emulation is slow and numerically different
             native_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported(including_emulation=False)
-            dtype = "bfloat16" if native_bf16 else "float16"
+            dtype = "float32" if device == "cpu" else ("bfloat16" if native_bf16 else "float16")
         self.dtype = dtype
         torch_dtype = getattr(torch, dtype)
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -152,14 +155,17 @@ class OpenJudgeClient(LLMClient):
 
     name = "open-judge"
 
-    def __init__(self, model_name: str, device: str = "cuda", dtype: str = "auto", prime: str = "Verdict:"):
+    def __init__(self, model_name: str, device: str = "auto", dtype: str = "auto", prime: str = "Verdict:"):
         import torch
+
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
         self.model_name, self.device, self.prime = model_name, device, prime
         if dtype == "auto":
             native_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported(including_emulation=False)
-            dtype = "bfloat16" if native_bf16 else "float16"
+            dtype = "float32" if device == "cpu" else ("bfloat16" if native_bf16 else "float16")
         self.dtype = dtype
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         torch_dtype = getattr(torch, dtype)

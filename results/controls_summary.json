@@ -1,6 +1,6 @@
 {
   "script": "src/controls.py summary",
-  "timestamp": "2026-10-10T23:37:47",
+  "timestamp": "2026-10-14T02:15:22",
   "noise_floor": {
     "all": {
       "resample_drift_rate": 0.0352,
@@ -276,6 +276,35 @@
     "VCS": {
       "p_corrected": 0.0,
       "significant": true
+    }
+  },
+  "excess_drift_pooled_by_source": {
+    "medqa": {
+      "excess": 0.1476,
+      "ci_95": [
+        0.1087,
+        0.1883
+      ],
+      "adversarial_rate": 0.1767,
+      "neutral_rate": 0.0291,
+      "n_cases": 103
+    },
+    "mimic-iv-note": {
+      "excess": 0.2795,
+      "ci_95": [
+        0.1726,
+        0.3808
+      ],
+      "adversarial_rate": 0.4575,
+      "neutral_rate": 0.1781,
+      "n_cases": 73
+    },
+    "gap_mimic-iv-note_minus_medqa": {
+      "diff": 0.1319,
+      "ci_95": [
+        0.018,
+        0.2378
+      ]
     }
   },
   "helpful_note_control": {

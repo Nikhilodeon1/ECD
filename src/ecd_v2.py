@@ -133,6 +133,7 @@ def phase_helpful0(a, client, judge, sample):
     base = {r["case_id"]: r for r in read_jsonl(path(a.tag, "baseline"))}
     wrong = [c for c in sample if c["id"] in helpful and not base.get(c["id"], {}).get("correct", True)]
     p = path(a.tag, "helpful0")
+    p.touch(exist_ok=True)  # an empty file is a valid outcome (model correct everywhere)
     todo = [c for c in wrong if c["id"] not in done_keys(p, lambda r: r["case_id"])]
     print(f"helpful0: {len(todo)} baseline-wrong cases with a helpful note")
     for i, c in enumerate(todo):
@@ -150,7 +151,8 @@ def phase_freeze_H(a):
     if p.exists() and not a.force:
         print(f"H already frozen at {p}")
         return
-    rows = sorted(read_jsonl(path(a.tag, "helpful0")), key=lambda r: r["case_id"])
+    h0 = path(a.tag, "helpful0")
+    rows = sorted(read_jsonl(h0) if h0.exists() else [], key=lambda r: r["case_id"])
     random.Random(a.seed).shuffle(rows)
     H = rows[:CAP]
     p.write_text("".join(json.dumps({"case_id": r["case_id"], "source": r["source"]}) + "\n" for r in H), encoding="utf-8")

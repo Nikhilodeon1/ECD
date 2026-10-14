@@ -5,8 +5,9 @@ out-of-fold AUC with a cluster bootstrap CI (cluster = case), a within-category
 permutation test, and baselines: category only, note length only, majority.
 Run again with diagnosis tokens masked to check for leakage.
 
-Rule (set before running): keep the classifier in the main text only if the
-lower CI bound of its AUC is >= 0.55 AND it beats the category-only baseline;
+Rule: keep the classifier in the main text only if the lower CI bound of its AUC is
+>= 0.55, it beats the category-only AND source-only baselines, and its AUC within each
+source is >= 0.55 (added after finding that data source alone gives AUC 0.645);
 otherwise it goes to the appendix and the abstract mention is cut.
 """
 import argparse
@@ -73,7 +74,7 @@ def within_category_permutation(y, cats, groups, texts, n_perm, seed=42):
     return null
 
 
-def evaluate(texts, y, cats, groups, lengths, n_perm, B):
+def evaluate(texts, y, cats, groups, lengths, n_perm, B, sources=None):
     res = {}
     s_text = oof_scores(texts, y, groups, make_text_model)
     auc = roc_auc_score(y, s_text)
@@ -91,6 +92,16 @@ def evaluate(texts, y, cats, groups, lengths, n_perm, B):
         l, h = cluster_bootstrap_auc(y, s, groups, B)
         res[name] = {"auc": round(a, 3), "ci_95": [round(l, 3), round(h, 3)]}
     res["majority"] = {"auc": 0.5}
+    if sources is not None and len(set(sources)) > 1:
+        # the data source alone predicts drift (MIMIC drifts more); text must beat it, and must
+        # carry signal WITHIN a source, or it is only detecting where the note came from
+        so = np.array([[x == sorted(set(sources))[-1]] for x in sources], float)
+        s_src = oof_scores(so, y, groups, lambda: LogisticRegression(max_iter=1000, class_weight="balanced"))
+        res["source_only"] = {"auc": round(roc_auc_score(y, s_src), 3)}
+        res["text_model_within_source_auc"] = {
+            str(k): round(roc_auc_score(y[np.asarray(sources) == k], s_text[np.asarray(sources) == k]), 3)
+            for k in sorted(set(sources))}
+        res["text_minus_source_only"] = {"diff": round(auc - roc_auc_score(y, s_src), 3)}
     # paired cluster bootstrap of text minus category-only
     rng = np.random.default_rng(7)
     ids = np.unique(groups)
@@ -119,17 +130,20 @@ def main():
     cats = np.array([t["category"] for t in trials])
     groups = np.array([t["case_id"] for t in trials])
     lengths = np.array([len(t["adversarial_note"].split()) for t in trials])
+    sources = [t["source"] for t in trials]
     raw = [f"[{t['category']}] {t['adversarial_note']}" for t in trials]
     masked = [f"[{t['category']}] {mask_diagnosis(t['adversarial_note'], t['diagnosis_before'])}" for t in trials]
 
     out = {"script": "src/classifier_validity.py", "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
            "n_trials": len(trials), "n_cases": len(set(groups.tolist())), "drift_rate": round(float(y.mean()), 3),
            "sources": sorted({t["source"] for t in trials}),
-           "unmasked": evaluate(raw, y, cats, groups, lengths, args.n_perm, args.B),
-           "diagnosis_masked": evaluate(masked, y, cats, groups, lengths, 0, args.B)}
+           "unmasked": evaluate(raw, y, cats, groups, lengths, args.n_perm, args.B, sources),
+           "diagnosis_masked": evaluate(masked, y, cats, groups, lengths, 0, args.B, sources)}
     for key in ("unmasked", "diagnosis_masked"):
         r = out[key]
-        keep = r["text_model"]["ci_95"][0] >= 0.55 and r["text_minus_category_only"]["ci_95"][0] > 0
+        keep = (r["text_model"]["ci_95"][0] >= 0.55 and r["text_minus_category_only"]["ci_95"][0] > 0
+                and r.get("text_minus_source_only", {"diff": 1})["diff"] > 0
+                and all(v >= 0.55 for v in r.get("text_model_within_source_auc", {"x": 1}).values()))
         r["keep_in_main_text"] = bool(keep)
     out["recommendation"] = (
         "keep in main text" if out["unmasked"]["keep_in_main_text"] and out["diagnosis_masked"]["keep_in_main_text"]
