@@ -160,3 +160,13 @@ Recorded before any beta > 0 run (this file is not yet committed, so these are p
   Claude-benchmark statistics are reported on the same 880 trials.
 * The original submission's 994-trial drift file was lost; every drift number in the
   rebuttal comes from this regenerated run and will differ slightly from the submitted ones.
+
+* 2026-10-16, found at gate G1 (before any beta > 0 run on the frozen sets): the 8B model
+  returned an empty completion (stop token immediately after "Diagnosis:") on 8 of 20 G1
+  trials, and the empty rate grew when the two distributions were mixed (parse rate 45% at
+  beta = 0.5). All ECD generations therefore block the stop token until at least one non-blank
+  token exists (at most 8 tokens), identically at every beta and for the baseline, undefended
+  and prompt-baseline runs. The 8B model's baseline accuracy under this rule will differ from
+  the submitted 38.2%, which counted empty completions as wrong. The decode loop itself was
+  verified token-identical to HuggingFace `generate()` on all 20 G1 trials (apart from the
+  trailing stop token).

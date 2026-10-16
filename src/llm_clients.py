@@ -116,8 +116,10 @@ class LlamaMedClient(LLMClient):
         max_tokens: int = 300,
         plausibility_mask: bool = False,
         stop_at_first_line: bool = True,
+        require_answer: bool = True,
     ) -> str:
-        """Sign-corrected ECD: beta=0 undefended, beta=1 ignores the note."""
+        """Sign-corrected ECD: beta=0 undefended, beta=1 ignores the note.
+        require_answer blocks an empty completion (see ecd_decode.generate_with_ecd)."""
         from ecd_decode import generate_with_ecd
 
         return generate_with_ecd(
@@ -130,6 +132,7 @@ class LlamaMedClient(LLMClient):
             device=self.device,
             plausibility_mask=plausibility_mask,
             stop_at_first_line=stop_at_first_line,
+            require_answer=require_answer,
         )
 
     def generate_ecd_legacy(

@@ -44,11 +44,13 @@ if __name__ == "__main__":
     client = LlamaMedClient(model_name=args.model_name)
 
     rows, hits = [], {b: 0 for b in betas}
+    n_ref_empty = 0
     parsed_ok = {b: 0 for b in betas}
     for t in trials:
         orig_p = build_llama_baseline_prompt(t["original_note"])
         full_p = build_llama_followup_prompt(t["original_note"], t["adversarial_note"])
-        ref = parse_llama_diagnosis(client.generate(orig_p, max_tokens=200))  # HF generate, original only
+        ref = parse_llama_diagnosis(client.generate_ecd(orig_p, orig_p, beta=0.0, max_tokens=200))  # same loop, original context only
+        n_ref_empty += int(not normalize(ref))
         row = {"case_id": t["case_id"], "category": t["category"], "reference_original_only": ref, "by_beta": {}}
         for b in betas:
             out = parse_llama_diagnosis(client.generate_ecd(orig_p, full_p, beta=b, max_tokens=200))
@@ -77,7 +79,11 @@ if __name__ == "__main__":
     }
     up_to_one = [agg["match_rate_vs_original_only_greedy"][str(b)] for b in betas if b <= 1.0]
     agg["monotone_nondecreasing_up_to_beta1"] = all(x <= y for x, y in zip(up_to_one, up_to_one[1:])) if n else None
-    agg["pass_beta1_ge_0.95"] = (hits.get(1.0, 0) / n >= 0.95) if n and 1.0 in hits else None
+    n_valid = n - n_ref_empty  # trials whose original-only reference is non-empty
+    agg["n_reference_empty"] = n_ref_empty
+    agg["match_rate_over_nonempty_references"] = {str(b): round(hits[b] / n_valid, 3) if n_valid else None for b in betas}
+    agg["pass_beta1_ge_0.95"] = bool(n_valid >= 15 and hits.get(1.0, 0) / n_valid >= 0.95) if 1.0 in hits else None
+    agg["note"] = "pass needs >= 15 non-empty references and >= 95% of them matched at beta=1"
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(agg, indent=2), encoding="utf-8")
     print(json.dumps(agg, indent=2))

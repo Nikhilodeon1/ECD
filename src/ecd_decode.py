@@ -73,10 +73,13 @@ def ecd_generate_ids(
     eos_ids: set[int],
     plausibility_mask: bool = False,
     stop_after: callable = None,
+    blank_check: callable = None,
 ) -> list[int]:
     """Greedy decode on blended scores. full_ids / original_ids: [1, L] on the
     model's device. stop_after(generated_ids) -> True ends generation early
-    (used to stop once the first answer line is complete)."""
+    (used to stop once the first answer line is complete). blank_check(generated_ids)
+    -> True means "no answer text yet": EOS is blocked at that step, so the model cannot
+    return an empty completion (applied identically at every beta)."""
     model.eval()
     full_past = original_past = None
     input_full, input_original = full_ids, original_ids
@@ -96,6 +99,10 @@ def ecd_generate_ids(
             scores = blend_logprobs(full_logprobs, original_logprobs, beta, plausibility_mask)
         else:
             scores = full_logprobs
+
+        if blank_check is not None and eos_ids and blank_check(generated):
+            scores = scores.clone()
+            scores[:, list(eos_ids)] = float("-inf")
 
         next_token = torch.argmax(scores, dim=-1, keepdim=True)
         token_id = int(next_token.item())
@@ -133,10 +140,14 @@ def generate_with_ecd(
     device: str = "cpu",
     plausibility_mask: bool = False,
     stop_at_first_line: bool = False,
+    require_answer: bool = False,
 ) -> str:
     """stop_at_first_line: end once the first answer line is complete. The
     experiment parsers read only the first non-empty line, so the parse is
-    unchanged; leave False for byte-identity checks against model.generate."""
+    unchanged; leave False for byte-identity checks against model.generate.
+    require_answer: block EOS until some non-blank text exists (max 8 tokens), so
+    the model cannot answer with nothing. The 8B model returned an empty completion
+    on ~40% of G1 trials; the experiments set this True in every condition."""
     full_ids = tokenizer(full_prompt, return_tensors="pt").input_ids.to(device)
     original_ids = tokenizer(original_prompt, return_tensors="pt").input_ids.to(device)
     generated = ecd_generate_ids(
@@ -148,6 +159,8 @@ def generate_with_ecd(
         _eos_ids(model, tokenizer),
         plausibility_mask=plausibility_mask,
         stop_after=_first_line_done(tokenizer) if stop_at_first_line else None,
+        blank_check=(lambda g: len(g) < 8 and not tokenizer.decode(g, skip_special_tokens=True).strip())
+        if require_answer else None,
     )
     return tokenizer.decode(generated, skip_special_tokens=True)
 

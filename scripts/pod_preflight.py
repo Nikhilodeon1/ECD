@@ -49,11 +49,14 @@ def main() -> int:
     facts["mode"] = "full (MIMIC allowed)" if ALLOW_MIMIC else "public (MIMIC rows dropped)"
     facts["env_file_present"] = env_ok
     if not env_ok:
-        problems.append(".env missing (needs ANTHROPIC_API_KEY or ClaudeKey)")
+        facts["warning_env"] = ".env missing: only needed for Claude API steps, not for GPU runs with the open judge"
     facts["files"] = {n: {"exists": p.exists(), "mtime": mtime(p)} for n, p in files.items()}
     for n, p in files.items():
         if not p.exists():
-            problems.append(f"missing data/processed/{n}")
+            if n == "cases.jsonl":
+                facts["warning_cases"] = "cases.jsonl missing: only needed to rebuild the sample or run baselines_mimic"
+            else:
+                problems.append(f"missing data/processed/{n}")
 
     ids = {}
     if files["eval_sample.jsonl"].exists():

@@ -26,14 +26,14 @@ fi
 # shellcheck disable=SC1091
 source "$VENV/bin/activate"
 python -m pip install -q --upgrade pip
-# CUDA build of torch (needed for the GPU; the CPU wheel is NOT enough here). V100 = sm70, supported by cu121.
-python -m pip install -q torch --index-url https://download.pytorch.org/whl/cu121
+# CUDA build of torch (needed for the GPU; the CPU wheel is NOT enough here). transformers 5 needs torch >= 2.6, so cu124 (cu121 stops at 2.5.1).
+python -m pip install -q "torch>=2.6" --index-url https://download.pytorch.org/whl/cu124
 python -m pip install -q -r "$ROOT/requirements.txt" pytest
 # a mirror/pip config can hand back a CPU-only torch even on a GPU box: fix it automatically
 if command -v nvidia-smi >/dev/null && nvidia-smi -L >/dev/null 2>&1; then
   if ! python -c 'import torch,sys; sys.exit(0 if torch.cuda.is_available() else 1)'; then
     echo "torch has no CUDA although a GPU is present -> reinstalling the CUDA build"
-    python -m pip install -q --force-reinstall torch --index-url https://download.pytorch.org/whl/cu121
+    python -m pip install -q --force-reinstall torch --index-url https://download.pytorch.org/whl/cu124
   fi
 fi
 python - <<'PY'

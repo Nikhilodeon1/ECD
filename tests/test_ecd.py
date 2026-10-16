@@ -143,6 +143,30 @@ def test_end_to_end_direction_fake_lm():
         assert ids[0] == 0, (alpha, ids)
 
 
+class EosFirstLM(FakeLM):
+    """Step 0: EOS (id 3) is the single most likely token, token 1 second."""
+
+    def __call__(self, ids, past_key_values=None, use_cache=True):
+        if past_key_values is None:
+            row = torch.full((10,), -30.0)
+            row[self.EOS] = 0.0
+            row[1] = -1.0
+            return Out(row.view(1, 1, -1), ("x", 1))
+        return super().__call__(ids, past_key_values, use_cache)
+
+
+def test_blank_check_blocks_eos():
+    lm = EosFirstLM()
+    ids = torch.tensor([[5, 6]])
+    assert new.ecd_generate_ids(lm, ids, ids, 0.0, 3, {FakeLM.EOS}) == []  # model answers with nothing
+    got = new.ecd_generate_ids(lm, ids, ids, 0.0, 3, {FakeLM.EOS}, blank_check=lambda g: len(g) == 0)
+    assert got and got[0] == 1  # EOS blocked, next-best token used
+    # identical rule at every beta
+    for beta in (0.0, 0.5, 1.0):
+        out = new.ecd_generate_ids(lm, ids, ids, beta, 3, {FakeLM.EOS}, blank_check=lambda g: len(g) == 0)
+        assert out and out[0] == 1
+
+
 # ---- byte-identity on a tiny random GPT-2 ------------------------------------
 
 
