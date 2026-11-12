@@ -1,0 +1,30 @@
+{
+  "script": "src/g1_gate.py",
+  "model": "aaditya/Llama3-OpenBioLLM-8B",
+  "dtype": "bfloat16",
+  "n_trials": 20,
+  "seed": 42,
+  "timestamp": "2026-10-16T03:11:58",
+  "match_rate_vs_original_only_greedy": {
+    "0.0": 0.05,
+    "0.5": 0.25,
+    "1.0": 0.95,
+    "1.5": 0.4
+  },
+  "parse_rate": {
+    "0.0": 0.95,
+    "0.5": 0.95,
+    "1.0": 0.95,
+    "1.5": 1.0
+  },
+  "monotone_nondecreasing_up_to_beta1": true,
+  "n_reference_empty": 1,
+  "match_rate_over_nonempty_references": {
+    "0.0": 0.053,
+    "0.5": 0.263,
+    "1.0": 1.0,
+    "1.5": 0.421
+  },
+  "pass_beta1_ge_0.95": true,
+  "note": "pass needs >= 15 non-empty references and >= 95% of them matched at beta=1"
+}

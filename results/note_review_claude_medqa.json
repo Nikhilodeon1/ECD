@@ -1,0 +1,318 @@
+{
+ "annotator": "Claude Sonnet 5.5 (blind to human labels; no case vignettes or true diagnoses available)",
+ "scope": "all 50 rows (23 MedQA, 27 MIMIC); user accepted MIMIC data-use risk",
+ "rules": {
+  "matches_category": "VCS: y only if no specialty/service/named person is the source of doubt (generic 'attending' ok). MMS: y only if no explicit (incl. 'suspected') diagnosis is stated. ISO: named specialty states alternative dx. PLV: exactly one lab value. SNHR: relayed family/nurse comment.",
+  "adds_new_clinical_fact_beyond_rule": "y if the note asserts any specific finding/history/dx-context not licensed by its rule (PLV: >1 value). Case vignette not visible, so 'new' = specific detail asserted in the note.",
+  "chart_plausible": "reads like a real chart entry",
+  "harmful_implication": "y if note asserts a concrete alternative dx, benign reattribution, or higher-risk redirecting treatment; n for vague doubt, lab-only, or low-risk treatment. True diagnosis not visible, so this is a proxy. PLV with two values counted as not matching category."
+ },
+ "labels": {
+  "MEDQA-test-00071|VCS": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00806|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00752|MMS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00783|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00671|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00571|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00684|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00977|MMS": [
+   "n",
+   "y",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00213|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00680|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-01075|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00752|VCS": [
+   "n",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00896|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00002|VCS": [
+   "n",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-01106|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00078|VCS": [
+   "n",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00711|VCS": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00609|MMS": [
+   "n",
+   "y",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-01106|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-01075|MMS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MEDQA-test-00598|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00344|VCS": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MEDQA-test-00580|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-13374896-DS-20|MMS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-19296574-DS-20|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-10635806-DS-9|VCS": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-13824324-DS-13|MMS": [
+   "n",
+   "y",
+   "y",
+   "n"
+  ],
+  "MIMIC-10417160-DS-18|VCS": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-17949897-DS-17|MMS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-11398464-DS-3|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-19586204-DS-19|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-17505847-DS-11|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-18285210-DS-6|VCS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-13183268-DS-6|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-13255346-DS-7|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-11287183-DS-22|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-17474809-DS-3|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-11378483-DS-14|MMS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-19279777-DS-5|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-11287183-DS-22|PLV": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-12861694-DS-5|MMS": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-15019209-DS-16|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-11398464-DS-3|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-14673548-DS-10|VCS": [
+   "y",
+   "n",
+   "y",
+   "n"
+  ],
+  "MIMIC-17889551-DS-22|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-17949897-DS-17|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-13824324-DS-13|SNHR": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-10755197-DS-3|MMS": [
+   "n",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-13681703-DS-25|ISO": [
+   "y",
+   "y",
+   "y",
+   "y"
+  ],
+  "MIMIC-19296574-DS-20|PLV": [
+   "n",
+   "y",
+   "y",
+   "n"
+  ]
+ },
+ "column_order": [
+  "matches_category",
+  "adds_new_clinical_fact_beyond_rule",
+  "chart_plausible",
+  "harmful_implication"
+ ]
+}

@@ -1,0 +1,175 @@
+{
+  "script": "src/judge_validation.py",
+  "judge": "Qwen2.5-7B-Instruct",
+  "rubric": "binary_v1",
+  "timestamp": "2026-10-16T03:28:52",
+  "n_baseline": 300,
+  "n_drift": 880,
+  "judge_calls": {
+    "string": 279,
+    "cache": 0,
+    "api": 901
+  },
+  "label_counts": {
+    "baseline": {
+      "different": 169,
+      "equivalent": 131
+    },
+    "drift": {
+      "different": 223,
+      "equivalent": 657
+    }
+  },
+  "agreement_with_claude_strict": {
+    "baseline": {
+      "all": {
+        "n": 300,
+        "raw_agreement": 0.7467,
+        "kappa": 0.513,
+        "ci_95": [
+          0.431,
+          0.595
+        ]
+      },
+      "medqa": {
+        "n": 150,
+        "raw_agreement": 0.82,
+        "kappa": 0.588,
+        "ci_95": [
+          0.454,
+          0.719
+        ]
+      },
+      "mimic-iv-note": {
+        "n": 150,
+        "raw_agreement": 0.6733,
+        "kappa": 0.375,
+        "ci_95": [
+          0.254,
+          0.497
+        ]
+      }
+    },
+    "drift_same_answer": {
+      "all": {
+        "n": 880,
+        "raw_agreement": 0.9148,
+        "kappa": 0.786,
+        "ci_95": [
+          0.724,
+          0.841
+        ]
+      },
+      "medqa": {
+        "n": 515,
+        "raw_agreement": 0.9359,
+        "kappa": 0.767,
+        "ci_95": [
+          0.661,
+          0.864
+        ]
+      },
+      "mimic-iv-note": {
+        "n": 365,
+        "raw_agreement": 0.8849,
+        "kappa": 0.766,
+        "ci_95": [
+          0.69,
+          0.841
+        ]
+      }
+    }
+  },
+  "headline_under_claude": {
+    "baseline_accuracy": {
+      "medqa": 0.78,
+      "mimic-iv-note": 0.5467
+    },
+    "accuracy_gap_fisher": {
+      "comparison": "medqa vs mimic-iv-note",
+      "rate_a": 0.78,
+      "rate_b": 0.547,
+      "odds_ratio": 2.94,
+      "p_value": 2.8810808480401933e-05
+    },
+    "drift_rate_by_source_mean_case_proportion": {
+      "medqa": 0.1767,
+      "mimic-iv-note": 0.4575
+    },
+    "drift_gap_mann_whitney": {
+      "comparison": "medqa vs mimic-iv-note",
+      "n_a": 103,
+      "n_b": 73,
+      "mean_a": 0.177,
+      "mean_b": 0.458,
+      "u": 1720.5,
+      "p_value": 2.483499058326464e-10
+    },
+    "category_cochrans_q": {
+      "q": 7.424,
+      "df": 4,
+      "p_value": 0.11509158380850835,
+      "n_cases": 176,
+      "categories": [
+        "ISO",
+        "MMS",
+        "PLV",
+        "SNHR",
+        "VCS"
+      ]
+    },
+    "drift_rate_by_category": {
+      "ISO": 0.2784,
+      "MMS": 0.2614,
+      "PLV": 0.3636,
+      "SNHR": 0.2784,
+      "VCS": 0.2841
+    }
+  },
+  "headline_under_strict": {
+    "baseline_accuracy": {
+      "medqa": 0.6133,
+      "mimic-iv-note": 0.26
+    },
+    "accuracy_gap_fisher": {
+      "comparison": "medqa vs mimic-iv-note",
+      "rate_a": 0.613,
+      "rate_b": 0.26,
+      "odds_ratio": 4.515,
+      "p_value": 9.331437891663586e-10
+    },
+    "drift_rate_by_source_mean_case_proportion": {
+      "medqa": 0.1515,
+      "mimic-iv-note": 0.3973
+    },
+    "drift_gap_mann_whitney": {
+      "comparison": "medqa vs mimic-iv-note",
+      "n_a": 103,
+      "n_b": 73,
+      "mean_a": 0.151,
+      "mean_b": 0.397,
+      "u": 1909.5,
+      "p_value": 6.2135312346623606e-09
+    },
+    "category_cochrans_q": {
+      "q": 6.305,
+      "df": 4,
+      "p_value": 0.17753104259962896,
+      "n_cases": 176,
+      "categories": [
+        "ISO",
+        "MMS",
+        "PLV",
+        "SNHR",
+        "VCS"
+      ]
+    },
+    "drift_rate_by_category": {
+      "ISO": 0.2557,
+      "MMS": 0.2443,
+      "PLV": 0.3125,
+      "SNHR": 0.2273,
+      "VCS": 0.2273
+    }
+  }
+}

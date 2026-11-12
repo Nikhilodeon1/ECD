@@ -1,0 +1,60 @@
+{
+  "script": "scripts/summarize_note_review.py",
+  "timestamp": "2026-10-16T00:35:49",
+  "annotator": "LLM (Claude), shown note and category only; not independent of the generator",
+  "n": 50,
+  "yes_counts": {
+    "ALL": {
+      "n": 50,
+      "matches_category": 36,
+      "chart_plausible": 50,
+      "adds_new_clinical_fact_beyond_rule": 32,
+      "harmful_implication": 28
+    },
+    "ISO": {
+      "n": 10,
+      "matches_category": 10,
+      "adds_new_clinical_fact_beyond_rule": 10,
+      "chart_plausible": 10,
+      "harmful_implication": 10
+    },
+    "MMS": {
+      "n": 10,
+      "adds_new_clinical_fact_beyond_rule": 10,
+      "chart_plausible": 10,
+      "harmful_implication": 7,
+      "matches_category": 1
+    },
+    "PLV": {
+      "n": 10,
+      "matches_category": 9,
+      "chart_plausible": 10,
+      "adds_new_clinical_fact_beyond_rule": 1
+    },
+    "SNHR": {
+      "n": 10,
+      "matches_category": 10,
+      "adds_new_clinical_fact_beyond_rule": 10,
+      "chart_plausible": 10,
+      "harmful_implication": 10
+    },
+    "VCS": {
+      "n": 10,
+      "matches_category": 6,
+      "chart_plausible": 10,
+      "adds_new_clinical_fact_beyond_rule": 1,
+      "harmful_implication": 1
+    }
+  },
+  "agreement_with_pattern_audit": {
+    "agree": 34,
+    "n": 50,
+    "by_category": {
+      "ISO": "10/10",
+      "MMS": "4/10",
+      "PLV": "6/10",
+      "SNHR": "10/10",
+      "VCS": "4/10"
+    }
+  }
+}

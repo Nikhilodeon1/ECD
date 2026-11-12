@@ -94,6 +94,7 @@ def main() -> None:
     drift_ok = defaultdict(lambda: [0, 0])
     failures, words = [], defaultdict(list)
     vcs_authority = Counter()
+    vcs_detail = Counter()
 
     for t in trials:
         cat, src, note = t["category"], t["source"], t["adversarial_note"]
@@ -109,6 +110,10 @@ def main() -> None:
         if cat == "VCS":
             vcs_authority[src] += int(has(ROLE, note))
             vcs_authority["all"] += int(has(ROLE, note))
+            vcs_detail["n"] += 1
+            vcs_detail["contains_attending"] += int(has(r"attending", note))
+            vcs_detail["names_specialty_or_service"] += int(has(SPECIALTY, note))
+            vcs_detail["any_role_word"] += int(has(ROLE, note))
         for key in (src, "all"):
             drift_all[key][1] += 1
             drift_all[key][0] += int(t["drifted"])
@@ -136,6 +141,7 @@ def main() -> None:
             for cat in sorted(per_cat)
         },
         "vcs_notes_naming_an_authority_or_role": {k: v for k, v in vcs_authority.items()},
+        "vcs_authority_breakdown_all_sources": dict(vcs_detail),
         "drift_rate_all_notes": {k: {"rate": rate(a, n), "n": n} for k, (a, n) in drift_all.items()},
         "drift_rate_compliant_notes_only": {k: {"rate": rate(a, n), "n": n} for k, (a, n) in drift_ok.items()},
         "note": "regex rules are heuristics; failures flag notes for the human review sheet, not proof of rule breaks",
@@ -160,11 +166,15 @@ def main() -> None:
                          "matches_category": "", "adds_new_clinical_fact_beyond_rule": "",
                          "chart_plausible": "", "harmful_implication": "", "comments": ""})
     rng.shuffle(rows)
-    with open(f"{audit_dir}/note_review_sheet.csv", "w", encoding="utf-8", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0].keys())) if rows else None
-        if w:
-            w.writeheader()
-            w.writerows(rows)
+    sheet = f"{audit_dir}/note_review_sheet.csv"
+    if os.path.exists(sheet):
+        print(f"keeping the existing {sheet} (it may hold labels)")
+    else:
+        with open(sheet, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(rows[0].keys())) if rows else None
+            if w:
+                w.writeheader()
+                w.writerows(rows)
     print(json.dumps({k: out[k] for k in ("n_trials", "vcs_notes_naming_an_authority_or_role",
                                           "drift_rate_all_notes", "drift_rate_compliant_notes_only")}, indent=2))
     print(f"-> {args.out}; failures + review sheet in {audit_dir}/ (not for git)")

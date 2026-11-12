@@ -1,0 +1,1257 @@
+{
+  "script": "src/ecd_v2.py summarize",
+  "model": "aaditya/Llama3-OpenBioLLM-8B",
+  "timestamp": "2026-10-16T04:03:47",
+  "seed": 42,
+  "caps": 150,
+  "betas": [
+    0.25,
+    0.5,
+    0.75,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "prereg": "docs/prereg-v2.md",
+  "baseline_accuracy": {
+    "all": {
+      "accuracy": 0.3633,
+      "n": 300
+    },
+    "medqa": {
+      "accuracy": 0.4533,
+      "n": 150
+    },
+    "mimic-iv-note": {
+      "accuracy": 0.2733,
+      "n": 150
+    }
+  },
+  "set_sizes": {
+    "D": 150,
+    "H": 150,
+    "underpowered_D_lt_60": false,
+    "U": 44
+  },
+  "by_beta": {
+    "0.25": {
+      "R": {
+        "rate": 0.2267,
+        "k": 34,
+        "n": 150,
+        "wilson_95": [
+          0.167,
+          0.3
+        ],
+        "cluster_boot_95": [
+          0.1597,
+          0.3014
+        ],
+        "n_cases": 68,
+        "incoherent_rate": 0.0867
+      },
+      "S": {
+        "rate": 0.2045,
+        "k": 9,
+        "n": 44,
+        "wilson_95": [
+          0.1115,
+          0.345
+        ],
+        "cluster_boot_95": [
+          0.0909,
+          0.3182
+        ],
+        "n_cases": 44,
+        "incoherent_rate": 0.0682
+      },
+      "accuracy_on_helpful": {
+        "rate": 0.2867,
+        "k": 43,
+        "n": 150,
+        "wilson_95": [
+          0.2203,
+          0.3637
+        ],
+        "cluster_boot_95": [
+          0.2133,
+          0.36
+        ],
+        "n_cases": 150,
+        "incoherent_rate": 0.0533
+      },
+      "R_by_source": {
+        "medqa": {
+          "rate": 0.2791,
+          "k": 24,
+          "n": 86,
+          "wilson_95": [
+            0.1953,
+            0.3817
+          ],
+          "cluster_boot_95": [
+            0.1818,
+            0.3875
+          ],
+          "n_cases": 45,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.1562,
+          "k": 10,
+          "n": 64,
+          "wilson_95": [
+            0.0871,
+            0.2643
+          ],
+          "cluster_boot_95": [
+            0.0746,
+            0.2456
+          ],
+          "n_cases": 23,
+          "incoherent_rate": 0.2031
+        }
+      },
+      "R_by_category": {
+        "ISO": {
+          "rate": 0.1333,
+          "k": 4,
+          "n": 30,
+          "wilson_95": [
+            0.0531,
+            0.2968
+          ],
+          "cluster_boot_95": [
+            0.0333,
+            0.2667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        },
+        "MMS": {
+          "rate": 0.1667,
+          "k": 5,
+          "n": 30,
+          "wilson_95": [
+            0.0734,
+            0.3356
+          ],
+          "cluster_boot_95": [
+            0.0333,
+            0.3
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0
+        },
+        "PLV": {
+          "rate": 0.2667,
+          "k": 8,
+          "n": 30,
+          "wilson_95": [
+            0.1418,
+            0.4445
+          ],
+          "cluster_boot_95": [
+            0.1,
+            0.4333
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        },
+        "SNHR": {
+          "rate": 0.2333,
+          "k": 7,
+          "n": 30,
+          "wilson_95": [
+            0.1179,
+            0.4093
+          ],
+          "cluster_boot_95": [
+            0.1,
+            0.4
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "VCS": {
+          "rate": 0.3333,
+          "k": 10,
+          "n": 30,
+          "wilson_95": [
+            0.1923,
+            0.5122
+          ],
+          "cluster_boot_95": [
+            0.1667,
+            0.5
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.2
+        }
+      },
+      "S_by_source": {
+        "medqa": {
+          "rate": 0.1,
+          "k": 2,
+          "n": 20,
+          "wilson_95": [
+            0.0279,
+            0.301
+          ],
+          "cluster_boot_95": [
+            0.0,
+            0.25
+          ],
+          "n_cases": 20,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.2917,
+          "k": 7,
+          "n": 24,
+          "wilson_95": [
+            0.1491,
+            0.4917
+          ],
+          "cluster_boot_95": [
+            0.125,
+            0.5
+          ],
+          "n_cases": 24,
+          "incoherent_rate": 0.125
+        }
+      }
+    },
+    "0.5": {
+      "R": {
+        "rate": 0.5133,
+        "k": 77,
+        "n": 150,
+        "wilson_95": [
+          0.434,
+          0.592
+        ],
+        "cluster_boot_95": [
+          0.4085,
+          0.6143
+        ],
+        "n_cases": 68,
+        "incoherent_rate": 0.0933
+      },
+      "S": {
+        "rate": 0.5,
+        "k": 22,
+        "n": 44,
+        "wilson_95": [
+          0.3583,
+          0.6417
+        ],
+        "cluster_boot_95": [
+          0.3636,
+          0.6364
+        ],
+        "n_cases": 44,
+        "incoherent_rate": 0.0909
+      },
+      "accuracy_on_helpful": {
+        "rate": 0.2067,
+        "k": 31,
+        "n": 150,
+        "wilson_95": [
+          0.1496,
+          0.2784
+        ],
+        "cluster_boot_95": [
+          0.1467,
+          0.2733
+        ],
+        "n_cases": 150,
+        "incoherent_rate": 0.0733
+      },
+      "R_by_source": {
+        "medqa": {
+          "rate": 0.6279,
+          "k": 54,
+          "n": 86,
+          "wilson_95": [
+            0.5223,
+            0.7225
+          ],
+          "cluster_boot_95": [
+            0.5059,
+            0.7477
+          ],
+          "n_cases": 45,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.3594,
+          "k": 23,
+          "n": 64,
+          "wilson_95": [
+            0.2529,
+            0.4818
+          ],
+          "cluster_boot_95": [
+            0.1967,
+            0.5211
+          ],
+          "n_cases": 23,
+          "incoherent_rate": 0.2188
+        }
+      },
+      "R_by_category": {
+        "ISO": {
+          "rate": 0.5333,
+          "k": 16,
+          "n": 30,
+          "wilson_95": [
+            0.3614,
+            0.6977
+          ],
+          "cluster_boot_95": [
+            0.3667,
+            0.7
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "MMS": {
+          "rate": 0.5,
+          "k": 15,
+          "n": 30,
+          "wilson_95": [
+            0.3315,
+            0.6685
+          ],
+          "cluster_boot_95": [
+            0.3333,
+            0.6667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0
+        },
+        "PLV": {
+          "rate": 0.4,
+          "k": 12,
+          "n": 30,
+          "wilson_95": [
+            0.2459,
+            0.5768
+          ],
+          "cluster_boot_95": [
+            0.2333,
+            0.5667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        },
+        "SNHR": {
+          "rate": 0.5333,
+          "k": 16,
+          "n": 30,
+          "wilson_95": [
+            0.3614,
+            0.6977
+          ],
+          "cluster_boot_95": [
+            0.3667,
+            0.7
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1333
+        },
+        "VCS": {
+          "rate": 0.6,
+          "k": 18,
+          "n": 30,
+          "wilson_95": [
+            0.4232,
+            0.7541
+          ],
+          "cluster_boot_95": [
+            0.4333,
+            0.7667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1667
+        }
+      },
+      "S_by_source": {
+        "medqa": {
+          "rate": 0.35,
+          "k": 7,
+          "n": 20,
+          "wilson_95": [
+            0.1812,
+            0.5671
+          ],
+          "cluster_boot_95": [
+            0.15,
+            0.55
+          ],
+          "n_cases": 20,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.625,
+          "k": 15,
+          "n": 24,
+          "wilson_95": [
+            0.4271,
+            0.7884
+          ],
+          "cluster_boot_95": [
+            0.4167,
+            0.7917
+          ],
+          "n_cases": 24,
+          "incoherent_rate": 0.1667
+        }
+      }
+    },
+    "0.75": {
+      "R": {
+        "rate": 0.7133,
+        "k": 107,
+        "n": 150,
+        "wilson_95": [
+          0.6363,
+          0.7797
+        ],
+        "cluster_boot_95": [
+          0.6115,
+          0.8102
+        ],
+        "n_cases": 68,
+        "incoherent_rate": 0.1067
+      },
+      "S": {
+        "rate": 0.6364,
+        "k": 28,
+        "n": 44,
+        "wilson_95": [
+          0.4887,
+          0.7622
+        ],
+        "cluster_boot_95": [
+          0.5,
+          0.7727
+        ],
+        "n_cases": 44,
+        "incoherent_rate": 0.0682
+      },
+      "accuracy_on_helpful": {
+        "rate": 0.1467,
+        "k": 22,
+        "n": 150,
+        "wilson_95": [
+          0.0989,
+          0.2121
+        ],
+        "cluster_boot_95": [
+          0.0933,
+          0.2067
+        ],
+        "n_cases": 150,
+        "incoherent_rate": 0.0933
+      },
+      "R_by_source": {
+        "medqa": {
+          "rate": 0.8488,
+          "k": 73,
+          "n": 86,
+          "wilson_95": [
+            0.7584,
+            0.9095
+          ],
+          "cluster_boot_95": [
+            0.7551,
+            0.9348
+          ],
+          "n_cases": 45,
+          "incoherent_rate": 0.0116
+        },
+        "mimic-iv-note": {
+          "rate": 0.5312,
+          "k": 34,
+          "n": 64,
+          "wilson_95": [
+            0.4107,
+            0.6482
+          ],
+          "cluster_boot_95": [
+            0.3492,
+            0.7031
+          ],
+          "n_cases": 23,
+          "incoherent_rate": 0.2344
+        }
+      },
+      "R_by_category": {
+        "ISO": {
+          "rate": 0.6667,
+          "k": 20,
+          "n": 30,
+          "wilson_95": [
+            0.4878,
+            0.8077
+          ],
+          "cluster_boot_95": [
+            0.5,
+            0.8333
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "MMS": {
+          "rate": 0.8,
+          "k": 24,
+          "n": 30,
+          "wilson_95": [
+            0.6269,
+            0.905
+          ],
+          "cluster_boot_95": [
+            0.6333,
+            0.9333
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0333
+        },
+        "PLV": {
+          "rate": 0.7,
+          "k": 21,
+          "n": 30,
+          "wilson_95": [
+            0.5212,
+            0.8334
+          ],
+          "cluster_boot_95": [
+            0.5333,
+            0.8667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "SNHR": {
+          "rate": 0.6667,
+          "k": 20,
+          "n": 30,
+          "wilson_95": [
+            0.4878,
+            0.8077
+          ],
+          "cluster_boot_95": [
+            0.5,
+            0.8333
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1333
+        },
+        "VCS": {
+          "rate": 0.7333,
+          "k": 22,
+          "n": 30,
+          "wilson_95": [
+            0.5555,
+            0.8582
+          ],
+          "cluster_boot_95": [
+            0.5667,
+            0.8667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1667
+        }
+      },
+      "S_by_source": {
+        "medqa": {
+          "rate": 0.55,
+          "k": 11,
+          "n": 20,
+          "wilson_95": [
+            0.3421,
+            0.7418
+          ],
+          "cluster_boot_95": [
+            0.35,
+            0.75
+          ],
+          "n_cases": 20,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.7083,
+          "k": 17,
+          "n": 24,
+          "wilson_95": [
+            0.5083,
+            0.8509
+          ],
+          "cluster_boot_95": [
+            0.5417,
+            0.875
+          ],
+          "n_cases": 24,
+          "incoherent_rate": 0.125
+        }
+      }
+    },
+    "1.0": {
+      "R": {
+        "rate": 0.9067,
+        "k": 136,
+        "n": 150,
+        "wilson_95": [
+          0.8494,
+          0.9436
+        ],
+        "cluster_boot_95": [
+          0.8212,
+          0.9792
+        ],
+        "n_cases": 68,
+        "incoherent_rate": 0.1267
+      },
+      "S": {
+        "rate": 1.0,
+        "k": 44,
+        "n": 44,
+        "wilson_95": [
+          0.9197,
+          1.0
+        ],
+        "cluster_boot_95": [
+          1.0,
+          1.0
+        ],
+        "n_cases": 44,
+        "incoherent_rate": 0.0455
+      },
+      "accuracy_on_helpful": {
+        "rate": 0.0,
+        "k": 0,
+        "n": 150,
+        "wilson_95": [
+          0.0,
+          0.025
+        ],
+        "cluster_boot_95": [
+          0.0,
+          0.0
+        ],
+        "n_cases": 150,
+        "incoherent_rate": 0.0467
+      },
+      "R_by_source": {
+        "medqa": {
+          "rate": 1.0,
+          "k": 86,
+          "n": 86,
+          "wilson_95": [
+            0.9572,
+            1.0
+          ],
+          "cluster_boot_95": [
+            1.0,
+            1.0
+          ],
+          "n_cases": 45,
+          "incoherent_rate": 0.0116
+        },
+        "mimic-iv-note": {
+          "rate": 0.7812,
+          "k": 50,
+          "n": 64,
+          "wilson_95": [
+            0.6657,
+            0.865
+          ],
+          "cluster_boot_95": [
+            0.5932,
+            0.9434
+          ],
+          "n_cases": 23,
+          "incoherent_rate": 0.2812
+        }
+      },
+      "R_by_category": {
+        "ISO": {
+          "rate": 0.8667,
+          "k": 26,
+          "n": 30,
+          "wilson_95": [
+            0.7032,
+            0.9469
+          ],
+          "cluster_boot_95": [
+            0.7333,
+            0.9667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1333
+        },
+        "MMS": {
+          "rate": 0.9667,
+          "k": 29,
+          "n": 30,
+          "wilson_95": [
+            0.8333,
+            0.9941
+          ],
+          "cluster_boot_95": [
+            0.9,
+            1.0
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        },
+        "PLV": {
+          "rate": 0.9333,
+          "k": 28,
+          "n": 30,
+          "wilson_95": [
+            0.7868,
+            0.9815
+          ],
+          "cluster_boot_95": [
+            0.8333,
+            1.0
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1333
+        },
+        "SNHR": {
+          "rate": 0.9,
+          "k": 27,
+          "n": 30,
+          "wilson_95": [
+            0.7438,
+            0.9654
+          ],
+          "cluster_boot_95": [
+            0.7667,
+            1.0
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1333
+        },
+        "VCS": {
+          "rate": 0.8667,
+          "k": 26,
+          "n": 30,
+          "wilson_95": [
+            0.7032,
+            0.9469
+          ],
+          "cluster_boot_95": [
+            0.7333,
+            0.9667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1667
+        }
+      },
+      "S_by_source": {
+        "medqa": {
+          "rate": 1.0,
+          "k": 20,
+          "n": 20,
+          "wilson_95": [
+            0.8389,
+            1.0
+          ],
+          "cluster_boot_95": [
+            1.0,
+            1.0
+          ],
+          "n_cases": 20,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 1.0,
+          "k": 24,
+          "n": 24,
+          "wilson_95": [
+            0.862,
+            1.0
+          ],
+          "cluster_boot_95": [
+            1.0,
+            1.0
+          ],
+          "n_cases": 24,
+          "incoherent_rate": 0.0833
+        }
+      }
+    },
+    "1.5": {
+      "R": {
+        "rate": 0.7,
+        "k": 105,
+        "n": 150,
+        "wilson_95": [
+          0.6224,
+          0.7676
+        ],
+        "cluster_boot_95": [
+          0.5962,
+          0.8015
+        ],
+        "n_cases": 68,
+        "incoherent_rate": 0.08
+      },
+      "S": {
+        "rate": 0.9773,
+        "k": 43,
+        "n": 44,
+        "wilson_95": [
+          0.8819,
+          0.996
+        ],
+        "cluster_boot_95": [
+          0.9318,
+          1.0
+        ],
+        "n_cases": 44,
+        "incoherent_rate": 0.0227
+      },
+      "accuracy_on_helpful": {
+        "rate": 0.0267,
+        "k": 4,
+        "n": 150,
+        "wilson_95": [
+          0.0104,
+          0.0666
+        ],
+        "cluster_boot_95": [
+          0.0067,
+          0.0533
+        ],
+        "n_cases": 150,
+        "incoherent_rate": 0.04
+      },
+      "R_by_source": {
+        "medqa": {
+          "rate": 0.8953,
+          "k": 77,
+          "n": 86,
+          "wilson_95": [
+            0.8129,
+            0.944
+          ],
+          "cluster_boot_95": [
+            0.8354,
+            0.9512
+          ],
+          "n_cases": 45,
+          "incoherent_rate": 0.0116
+        },
+        "mimic-iv-note": {
+          "rate": 0.4375,
+          "k": 28,
+          "n": 64,
+          "wilson_95": [
+            0.3229,
+            0.5591
+          ],
+          "cluster_boot_95": [
+            0.2754,
+            0.619
+          ],
+          "n_cases": 23,
+          "incoherent_rate": 0.1719
+        }
+      },
+      "R_by_category": {
+        "ISO": {
+          "rate": 0.7667,
+          "k": 23,
+          "n": 30,
+          "wilson_95": [
+            0.5907,
+            0.8821
+          ],
+          "cluster_boot_95": [
+            0.6,
+            0.9
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        },
+        "MMS": {
+          "rate": 0.7333,
+          "k": 22,
+          "n": 30,
+          "wilson_95": [
+            0.5555,
+            0.8582
+          ],
+          "cluster_boot_95": [
+            0.5667,
+            0.9
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "PLV": {
+          "rate": 0.6333,
+          "k": 19,
+          "n": 30,
+          "wilson_95": [
+            0.4551,
+            0.7813
+          ],
+          "cluster_boot_95": [
+            0.4667,
+            0.8
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "SNHR": {
+          "rate": 0.7333,
+          "k": 22,
+          "n": 30,
+          "wilson_95": [
+            0.5555,
+            0.8582
+          ],
+          "cluster_boot_95": [
+            0.5667,
+            0.8667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        },
+        "VCS": {
+          "rate": 0.6333,
+          "k": 19,
+          "n": 30,
+          "wilson_95": [
+            0.4551,
+            0.7813
+          ],
+          "cluster_boot_95": [
+            0.4667,
+            0.8
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0667
+        }
+      },
+      "S_by_source": {
+        "medqa": {
+          "rate": 1.0,
+          "k": 20,
+          "n": 20,
+          "wilson_95": [
+            0.8389,
+            1.0
+          ],
+          "cluster_boot_95": [
+            1.0,
+            1.0
+          ],
+          "n_cases": 20,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.9583,
+          "k": 23,
+          "n": 24,
+          "wilson_95": [
+            0.7976,
+            0.9926
+          ],
+          "cluster_boot_95": [
+            0.875,
+            1.0
+          ],
+          "n_cases": 24,
+          "incoherent_rate": 0.0417
+        }
+      }
+    },
+    "2.0": {
+      "R": {
+        "rate": 0.6,
+        "k": 90,
+        "n": 150,
+        "wilson_95": [
+          0.52,
+          0.675
+        ],
+        "cluster_boot_95": [
+          0.5,
+          0.6993
+        ],
+        "n_cases": 68,
+        "incoherent_rate": 0.08
+      },
+      "S": {
+        "rate": 0.9773,
+        "k": 43,
+        "n": 44,
+        "wilson_95": [
+          0.8819,
+          0.996
+        ],
+        "cluster_boot_95": [
+          0.9318,
+          1.0
+        ],
+        "n_cases": 44,
+        "incoherent_rate": 0.0227
+      },
+      "accuracy_on_helpful": {
+        "rate": 0.0467,
+        "k": 7,
+        "n": 150,
+        "wilson_95": [
+          0.0228,
+          0.0932
+        ],
+        "cluster_boot_95": [
+          0.0133,
+          0.0867
+        ],
+        "n_cases": 150,
+        "incoherent_rate": 0.0467
+      },
+      "R_by_source": {
+        "medqa": {
+          "rate": 0.8023,
+          "k": 69,
+          "n": 86,
+          "wilson_95": [
+            0.706,
+            0.8728
+          ],
+          "cluster_boot_95": [
+            0.7143,
+            0.8837
+          ],
+          "n_cases": 45,
+          "incoherent_rate": 0.0349
+        },
+        "mimic-iv-note": {
+          "rate": 0.3281,
+          "k": 21,
+          "n": 64,
+          "wilson_95": [
+            0.2257,
+            0.45
+          ],
+          "cluster_boot_95": [
+            0.2063,
+            0.4677
+          ],
+          "n_cases": 23,
+          "incoherent_rate": 0.1406
+        }
+      },
+      "R_by_category": {
+        "ISO": {
+          "rate": 0.6333,
+          "k": 19,
+          "n": 30,
+          "wilson_95": [
+            0.4551,
+            0.7813
+          ],
+          "cluster_boot_95": [
+            0.4667,
+            0.8
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0333
+        },
+        "MMS": {
+          "rate": 0.7,
+          "k": 21,
+          "n": 30,
+          "wilson_95": [
+            0.5212,
+            0.8334
+          ],
+          "cluster_boot_95": [
+            0.5333,
+            0.8667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.0333
+        },
+        "PLV": {
+          "rate": 0.6,
+          "k": 18,
+          "n": 30,
+          "wilson_95": [
+            0.4232,
+            0.7541
+          ],
+          "cluster_boot_95": [
+            0.4333,
+            0.7667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        },
+        "SNHR": {
+          "rate": 0.4667,
+          "k": 14,
+          "n": 30,
+          "wilson_95": [
+            0.3023,
+            0.6386
+          ],
+          "cluster_boot_95": [
+            0.3,
+            0.6667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1333
+        },
+        "VCS": {
+          "rate": 0.6,
+          "k": 18,
+          "n": 30,
+          "wilson_95": [
+            0.4232,
+            0.7541
+          ],
+          "cluster_boot_95": [
+            0.4333,
+            0.7667
+          ],
+          "n_cases": 30,
+          "incoherent_rate": 0.1
+        }
+      },
+      "S_by_source": {
+        "medqa": {
+          "rate": 1.0,
+          "k": 20,
+          "n": 20,
+          "wilson_95": [
+            0.8389,
+            1.0
+          ],
+          "cluster_boot_95": [
+            1.0,
+            1.0
+          ],
+          "n_cases": 20,
+          "incoherent_rate": 0.0
+        },
+        "mimic-iv-note": {
+          "rate": 0.9583,
+          "k": 23,
+          "n": 24,
+          "wilson_95": [
+            0.7976,
+            0.9926
+          ],
+          "cluster_boot_95": [
+            0.875,
+            1.0
+          ],
+          "n_cases": 24,
+          "incoherent_rate": 0.0417
+        }
+      }
+    }
+  },
+  "accuracy_on_helpful_beta0": {
+    "rate": 0.2933,
+    "k": 44,
+    "n": 150,
+    "wilson_95": [
+      0.2264,
+      0.3706
+    ],
+    "cluster_boot_95": [
+      0.22,
+      0.3667
+    ],
+    "n_cases": 150,
+    "incoherent_rate": 0.02
+  },
+  "by_construction": {
+    "R(0)": 0.0,
+    "R(1)": 1.0,
+    "S(0)": 0.0,
+    "S(1)": 1.0,
+    "note": "these four are fixed by the definitions; the beta=1 point is the 'ignore the note' ceiling, not a result"
+  },
+  "prompt_baseline_P": {
+    "R_P": {
+      "rate": 0.04,
+      "k": 6,
+      "n": 150,
+      "wilson_95": [
+        0.0185,
+        0.0845
+      ],
+      "cluster_boot_95": [
+        0.0128,
+        0.0738
+      ],
+      "n_cases": 68,
+      "incoherent_rate": 0.0733
+    },
+    "S_P": {
+      "rate": 0.0909,
+      "k": 4,
+      "n": 44,
+      "wilson_95": [
+        0.0359,
+        0.2116
+      ],
+      "cluster_boot_95": [
+        0.0227,
+        0.1818
+      ],
+      "n_cases": 44,
+      "incoherent_rate": 0.0227
+    }
+  },
+  "decision_rule": {
+    "rule": {
+      "betas": [
+        0.25,
+        0.5,
+        0.75
+      ],
+      "min_R": 0.3,
+      "min_wilson_lb": 0.15,
+      "max_S": 0.1
+    },
+    "per_beta": [
+      {
+        "beta": 0.25,
+        "R": 0.2267,
+        "R_wilson_lb": 0.167,
+        "S": 0.2045,
+        "meets_rule": false
+      },
+      {
+        "beta": 0.5,
+        "R": 0.5133,
+        "R_wilson_lb": 0.434,
+        "S": 0.5,
+        "meets_rule": false
+      },
+      {
+        "beta": 0.75,
+        "R": 0.7133,
+        "R_wilson_lb": 0.6363,
+        "S": 0.6364,
+        "meets_rule": false
+      }
+    ],
+    "ECD_useful": false,
+    "if_not": "report as a recovery-suppression tradeoff, no free lunch"
+  }
+}

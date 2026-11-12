@@ -189,3 +189,58 @@ class OpenJudgeClient(LLMClient):
         with torch.no_grad():
             out = self.model.generate(ids, max_new_tokens=min(max_tokens, 100), do_sample=False, pad_token_id=pad)
         return self.prime + self.tokenizer.decode(out[0, ids.shape[1]:], skip_special_tokens=True)
+
+
+class ChatClient(LLMClient):
+    """Open-weight instruct model for notes, answers and verification. Chat template, greedy.
+    generate_batch() left-pads and sorts by length, which is what makes a few thousand
+    generations affordable on one GPU."""
+
+    name = "chat"
+
+    def __init__(self, model_name: str, device: str = "auto", dtype: str = "auto", batch_size: int = 16):
+        import torch
+
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        self.model_name, self.device, self.batch_size = model_name, device, batch_size
+        if dtype == "auto":
+            native_bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported(including_emulation=False)
+            dtype = "float32" if device == "cpu" else ("bfloat16" if native_bf16 else "float16")
+        self.dtype = dtype
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.tokenizer.padding_side = "left"
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        torch_dtype = getattr(torch, dtype)
+        try:
+            self.model = AutoModelForCausalLM.from_pretrained(model_name, dtype=torch_dtype, device_map=device)
+        except TypeError:
+            self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch_dtype, device_map=device)
+        self.model.eval()
+
+    def _render(self, prompt: str) -> str:
+        return self.tokenizer.apply_chat_template(
+            [{"role": "user", "content": prompt}], tokenize=False, add_generation_prompt=True)
+
+    def generate(self, prompt: str, max_tokens: int = 160) -> str:
+        return self.generate_batch([prompt], max_tokens=max_tokens)[0]
+
+    def generate_batch(self, prompts: list[str], max_tokens: int = 160) -> list[str]:
+        import torch
+
+        texts = [self._render(p) for p in prompts]
+        order = sorted(range(len(texts)), key=lambda i: len(texts[i]))
+        out = [""] * len(texts)
+        for s in range(0, len(order), self.batch_size):
+            idx = order[s:s + self.batch_size]
+            enc = self.tokenizer([texts[i] for i in idx], return_tensors="pt", padding=True,
+                                 add_special_tokens=False).to(self.device)
+            with torch.no_grad():
+                gen = self.model.generate(**enc, max_new_tokens=max_tokens, do_sample=False,
+                                          pad_token_id=self.tokenizer.pad_token_id)
+            for row, i in enumerate(idx):
+                out[i] = self.tokenizer.decode(gen[row, enc.input_ids.shape[1]:], skip_special_tokens=True)
+        return out

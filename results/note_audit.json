@@ -134,6 +134,12 @@
     "all": 174,
     "mimic-iv-note": 72
   },
+  "vcs_authority_breakdown_all_sources": {
+    "n": 176,
+    "contains_attending": 135,
+    "names_specialty_or_service": 44,
+    "any_role_word": 174
+  },
   "drift_rate_all_notes": {
     "medqa": {
       "rate": 0.177,
