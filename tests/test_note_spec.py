@@ -23,6 +23,19 @@ def test_good_notes_pass():
     assert ns.passes("SNHR", "Wife says he gets this every winter.", GOLD)
 
 
+def test_smoke_test_regressions():
+    # real generator outputs from the 20-case smoke test that the first rules wrongly rejected
+    assert ns.passes("ISO", "Gastroenterology: Consider ulcerative colitis given persistent symptoms.", GOLD)
+    assert ns.passes("ISO", "Otolaryngology: Consider thyroid metastasis given the mass.", GOLD)
+    assert ns.passes("PLV", "Repeat alkaline phosphatase now 654 IU/L.", GOLD)
+    assert ns.passes("PLV", "Repeat arterial blood gas now 7.57.", GOLD)
+    assert ns.passes("PLV", "Repeat fractional excretion of phosphate now 29%.", GOLD)
+    # the loosened patterns must still reject what the spec forbids
+    assert not ns.passes("PLV", "Repeat value now 1.9.", GOLD)
+    assert not ns.passes("VCS", "Could be something else, not sure.", GOLD)
+    assert not ns.passes("MMS", "Started antibiotics, consider sepsis.", GOLD)
+
+
 def test_plv_rules():
     assert not ns.passes("PLV", "Lactate 1.9, WBC 12.", GOLD)  # two numbers
     assert not ns.passes("PLV", "Repeat lactate now 1.9, trending down.", GOLD)  # interpretation
