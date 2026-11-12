@@ -70,6 +70,15 @@ def main() -> None:
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
+    if not a.dry_run:
+        gpu = subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
+                             capture_output=True, text=True).stdout.strip() or "no GPU found"
+        print(f"GPU: {gpu}")
+        if "A100" not in gpu and "H100" not in gpu:
+            print("WARNING: not an A100/H100. 7-9B models in fp16 need about 16 GB for weights alone, so they "
+                  "do not fit a 15 GB T4; 14B models need about 30 GB. Switch the runtime "
+                  "(Runtime > Change runtime type) before continuing.")
+
     data, results = Path(os.environ["ECD_DATA_DIR"]), Path(os.environ["ECD_RESULTS_DIR"])
     drive = Path(a.drive_dir) if a.drive_dir else None
     if drive and not a.dry_run:

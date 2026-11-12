@@ -234,13 +234,26 @@ class ChatClient(LLMClient):
         texts = [self._render(p) for p in prompts]
         order = sorted(range(len(texts)), key=lambda i: len(texts[i]))
         out = [""] * len(texts)
-        for s in range(0, len(order), self.batch_size):
+        s = 0
+        while s < len(order):
             idx = order[s:s + self.batch_size]
-            enc = self.tokenizer([texts[i] for i in idx], return_tensors="pt", padding=True,
-                                 add_special_tokens=False).to(self.device)
-            with torch.no_grad():
-                gen = self.model.generate(**enc, max_new_tokens=max_tokens, do_sample=False,
-                                          pad_token_id=self.tokenizer.pad_token_id)
+            try:
+                enc = self.tokenizer([texts[i] for i in idx], return_tensors="pt", padding=True,
+                                     add_special_tokens=False).to(self.device)
+                with torch.no_grad():
+                    gen = self.model.generate(**enc, max_new_tokens=max_tokens, do_sample=False,
+                                              pad_token_id=self.tokenizer.pad_token_id)
+            except torch.OutOfMemoryError:
+                # halve the batch and retry the same slice; a batch of 1 that still fails means
+                # the model does not fit this GPU
+                if self.batch_size == 1:
+                    raise
+                if self.device.startswith("cuda"):
+                    torch.cuda.empty_cache()
+                self.batch_size = max(1, self.batch_size // 2)
+                print(f"[chat] out of memory; batch size now {self.batch_size}", flush=True)
+                continue
             for row, i in enumerate(idx):
                 out[i] = self.tokenizer.decode(gen[row, enc.input_ids.shape[1]:], skip_special_tokens=True)
+            s += len(idx)
         return out
