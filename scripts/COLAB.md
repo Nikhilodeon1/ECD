@@ -1,6 +1,9 @@
 # Running the v3 pipeline on Colab (public text only)
 
-Runtime: **A100**. It runs bf16 and holds a 14B judge (about 28 GB of weights) plus its KV cache in
+Runtime: **G4 (96 GB RTX PRO 6000 Blackwell) if offered, else A100.** G4 has more memory (fits a 32B
+model in bf16 and larger batches) at a lower hourly credit rate than an A100 (reported about 8.7
+vs about 11-12 compute units per hour; check the rate Colab shows). The notes below are written
+for the A100 case. It runs bf16 and holds a 14B judge (about 28 GB of weights) plus its KV cache in
 40 GB, and with `--batch-size 48` an 8B model fills the card instead of idling. T4 has no bf16 and
 16 GB (an 8B model barely fits and cannot batch); L4 and A10 (24 GB) cannot hold a 14B judge in fp16;
 TPUs would need a different inference stack. Use batch 48 for 7-9B models and 16 for 14B.

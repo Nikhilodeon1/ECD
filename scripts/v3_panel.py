@@ -74,10 +74,14 @@ def main() -> None:
         gpu = subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
                              capture_output=True, text=True).stdout.strip() or "no GPU found"
         print(f"GPU: {gpu}")
-        if "A100" not in gpu and "H100" not in gpu:
-            print("WARNING: not an A100/H100. 7-9B models in fp16 need about 16 GB for weights alone, so they "
-                  "do not fit a 15 GB T4; 14B models need about 30 GB. Switch the runtime "
-                  "(Runtime > Change runtime type) before continuing.")
+        try:
+            mem_mib = int(gpu.split(",")[-1].strip().split()[0])
+        except (ValueError, IndexError):
+            mem_mib = 0
+        if mem_mib < 38000:
+            print("WARNING: under 38 GB of GPU memory. 7-9B models in bf16/fp16 need about 16 GB for weights alone, "
+                  "so they barely fit a 15 GB T4 and cannot batch; 14B models need about 30 GB. Switch the runtime "
+                  "(Runtime > Change runtime type) to an A100 or G4 before continuing.")
 
     data, results = Path(os.environ["ECD_DATA_DIR"]), Path(os.environ["ECD_RESULTS_DIR"])
     drive = Path(a.drive_dir) if a.drive_dir else None
