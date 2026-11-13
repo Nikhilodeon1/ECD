@@ -215,11 +215,30 @@ class ChatClient(LLMClient):
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
         torch_dtype = getattr(torch, dtype)
-        try:
-            self.model = AutoModelForCausalLM.from_pretrained(model_name, dtype=torch_dtype, device_map=device)
-        except TypeError:
-            self.model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch_dtype, device_map=device)
+        self.model = self._load(model_name, torch_dtype, device)
         self.model.eval()
+
+    @staticmethod
+    def _load(model_name: str, torch_dtype, device: str):
+        """Text-only checkpoints load with AutoModelForCausalLM. Some newer instruct models (Gemma 4)
+        are published as multimodal and only load with AutoModelForMultimodalLM; we use them as text
+        generators and never pass images."""
+        import transformers
+
+        def build(cls):
+            try:
+                return cls.from_pretrained(model_name, dtype=torch_dtype, device_map=device)
+            except TypeError:  # older transformers spell the argument torch_dtype
+                return cls.from_pretrained(model_name, torch_dtype=torch_dtype, device_map=device)
+
+        try:
+            return build(transformers.AutoModelForCausalLM)
+        except (ValueError, KeyError, OSError) as first:
+            mm = getattr(transformers, "AutoModelForMultimodalLM", None)
+            if mm is None:
+                raise
+            print(f"[chat] AutoModelForCausalLM failed ({type(first).__name__}); trying AutoModelForMultimodalLM", flush=True)
+            return build(mm)
 
     def _render(self, prompt: str) -> str:
         return self.tokenizer.apply_chat_template(
