@@ -121,6 +121,8 @@ def test_pipeline_end_to_end(tmp_path):
     assert (CASES[0]["id"], "H") in arms  # but they do get the helpful arm
     assert arms[(CASES[1]["id"], "B_attending")]["same_as_base"] is False  # attribution moved the fake model
     assert arms[(CASES[1]["id"], "A_unattributed")]["same_as_base"] is True
+    for a in v3.HEDGED:  # the exploratory hedged arms run through the same pipeline
+        assert (CASES[1]["id"], a) in arms
 
     s = sm.summarize(judged)["pubcase"]
     assert s["arms"]["B_attending"]["drift"] == 1.0 and s["arms"]["A_unattributed"]["drift"] == 0.0

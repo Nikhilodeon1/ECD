@@ -26,15 +26,17 @@ from pathlib import Path
 
 from controls import HELPFUL_PROMPT, leaks_diagnosis, neutral_for
 from judge import Judge
-from note_spec import (FRAMING_PREFIX, SPECS, VERIFY_NOTE_PROMPT, VERIFY_WRONG_DX_PROMPT, build_note_prompt,
-                       build_wrong_dx_prompt, check_note, check_wrong_dx, framing_notes, parse_yes_no)
+from note_spec import (FRAMING_PREFIX, HEDGED_PREFIX, SPECS, VERIFY_NOTE_PROMPT, VERIFY_WRONG_DX_PROMPT,
+                       build_note_prompt, build_wrong_dx_prompt, check_note, check_wrong_dx, framing_notes,
+                       hedged_notes, parse_yes_no)
 from paths import DATA, RESULTS, append_jsonl, read_jsonl
 from prompts import build_baseline_prompt, build_followup_prompt, parse_diagnosis
 
 V3 = DATA / "v3"
 CATS = tuple(SPECS)
 FRAMING = tuple(FRAMING_PREFIX)
-ARMS = ("R", "N", "H") + CATS + FRAMING
+HEDGED = tuple(HEDGED_PREFIX)  # secondary, exploratory (see note_spec)
+ARMS = ("R", "N", "H") + CATS + FRAMING + HEDGED
 EVIDENCE_WORDS = 800
 
 
@@ -269,9 +271,11 @@ def arm_prompt(arm: str, case: dict, notes: dict) -> str | None:
         return build_baseline_prompt(ev)
     if arm == "N":
         return build_followup_prompt(ev, neutral_for(cid))
-    if arm in FRAMING:
+    if arm in FRAMING or arm in HEDGED:
         x = notes.get((cid, "X"))
-        return build_followup_prompt(ev, framing_notes(x)[arm]) if x else None
+        if not x:
+            return None
+        return build_followup_prompt(ev, {**framing_notes(x), **hedged_notes(x)}[arm])
     note = notes.get((cid, arm))
     return build_followup_prompt(ev, note) if note else None
 

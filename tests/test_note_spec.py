@@ -75,6 +75,14 @@ def test_framing_notes_differ_only_in_prefix():
     assert notes["B_attending"].startswith("Attending physician: ")
 
 
+def test_hedged_notes_differ_only_in_prefix_and_are_weaker():
+    h = ns.hedged_notes("Unstable angina")
+    assert len({n.split(": ", 1)[-1] for n in h.values()}) == 1
+    assert h["A_hedged"] == "Findings could be consistent with Unstable angina."
+    assert h["B_hedged_attending"].startswith("Attending physician: ")
+    assert set(h).isdisjoint(ns.framing_notes("Unstable angina"))
+
+
 def test_wrong_dx_rules():
     assert all(ns.check_wrong_dx("Unstable angina", GOLD).values())
     assert not ns.check_wrong_dx("Community-acquired pneumonia", GOLD)["not_gold_string"]

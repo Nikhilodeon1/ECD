@@ -12,7 +12,7 @@ import numpy as np
 from scipy.stats import binomtest
 
 from paths import RESULTS, read_jsonl
-from v3_run import ARMS, CATS, FRAMING
+from v3_run import ARMS, CATS, FRAMING, HEDGED
 
 B = 10000
 
@@ -57,27 +57,33 @@ def summarize(rows: list[dict]) -> dict:
             k, n = sum(d.values()), len(d)
             s["arms"][arm] = {"n": n, "drift": round(k / n, 3) if n else None, "wilson": wilson(k, n)}
         neutral = drift.get("N", {})
-        for arm in ("R",) + CATS + FRAMING:
+        for arm in ("R",) + CATS + FRAMING + HEDGED:
             shared = sorted(set(drift.get(arm, {})) & set(neutral))
             if len(shared) >= 10:
                 x = np.array([drift[arm][c] for c in shared]); y = np.array([neutral[c] for c in shared])
                 s["arms"][arm]["excess_over_neutral"] = round(float(x.mean() - y.mean()), 3)
                 s["arms"][arm]["excess_ci"] = boot_mean_diff(x, y)
-        pa = drift.get("A_unattributed", {})
-        contrasts = []
-        for arm in ("B_attending", "C_nursing"):
-            shared = sorted(set(drift.get(arm, {})) & set(pa))
-            if len(shared) < 10:
-                continue
-            x = np.array([drift[arm][c] for c in shared]); y = np.array([pa[c] for c in shared])
-            b, c = int((x & ~y).sum()), int((~x & y).sum())
-            p = binomtest(b, b + c, 0.5).pvalue if b + c else 1.0
-            contrasts.append({"contrast": f"{arm} minus A_unattributed", "n": len(shared),
+
+        def contrasts_for(ref_arm: str, others: tuple) -> list[dict]:
+            ref = drift.get(ref_arm, {})
+            out_c = []
+            for arm in others:
+                shared = sorted(set(drift.get(arm, {})) & set(ref))
+                if len(shared) < 10:
+                    continue
+                x = np.array([drift[arm][c] for c in shared]); y = np.array([ref[c] for c in shared])
+                b, c = int((x & ~y).sum()), int((~x & y).sum())
+                p = binomtest(b, b + c, 0.5).pvalue if b + c else 1.0
+                out_c.append({"contrast": f"{arm} minus {ref_arm}", "n": len(shared),
                               "diff": round(float(x.mean() - y.mean()), 3), "ci": boot_mean_diff(x, y),
                               "discordant_up": b, "discordant_down": c, "p_exact": round(p, 4)})
-        for cobj, ph in zip(contrasts, holm([c["p_exact"] for c in contrasts])):
-            cobj["p_holm"] = round(ph, 4)
-        s["framing_contrasts"] = contrasts
+            for cobj, ph in zip(out_c, holm([c["p_exact"] for c in out_c])):
+                cobj["p_holm"] = round(ph, 4)
+            return out_c
+
+        s["framing_contrasts"] = contrasts_for("A_unattributed", ("B_attending", "C_nursing"))
+        # secondary, exploratory (added 2026-11-13, see docs/prereg-v3.md)
+        s["framing_contrasts_hedged"] = contrasts_for("A_hedged", ("B_hedged_attending", "C_hedged_nursing"))
         h = {r["case_id"]: r["correct_after"] for r in rs if r["arm"] == "H"}
         wrong = [c for c in h if not base.get(c, True)]
         right = [c for c in h if base.get(c, False)]

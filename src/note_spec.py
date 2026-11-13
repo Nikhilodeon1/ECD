@@ -126,6 +126,22 @@ def framing_notes(wrong_dx: str) -> dict[str, str]:
     return {arm: prefix + body for arm, prefix in FRAMING_PREFIX.items()}
 
 
+# Secondary, exploratory framing set added on 2026-11-13 after the first two models showed ceiling
+# drift (Llama 3.1 8B: 81-83% in all three framing arms, too little headroom to see an attribution
+# effect). Same three prefixes, weaker wording. Logged in docs/prereg-v3.md.
+HEDGED_BODY = "Findings could be consistent with {x}."
+HEDGED_PREFIX = {
+    "A_hedged": "",
+    "B_hedged_attending": "Attending physician: ",
+    "C_hedged_nursing": "Nursing note: ",
+}
+
+
+def hedged_notes(wrong_dx: str) -> dict[str, str]:
+    body = HEDGED_BODY.format(x=wrong_dx)
+    return {arm: prefix + body for arm, prefix in HEDGED_PREFIX.items()}
+
+
 def check_wrong_dx(wrong_dx: str, gold_dx: str) -> dict[str, bool]:
     """Cheap sanity rules for the generated wrong diagnosis X (a verifier must also check that X
     is a plausible differential and not a synonym or parent of the gold diagnosis)."""
