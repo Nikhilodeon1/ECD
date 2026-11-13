@@ -32,7 +32,10 @@ def sync(src: Path, dst: Path) -> int:
         if not f.is_file():
             continue
         t = dst / f.relative_to(src)
-        if t.exists() and t.stat().st_size == f.stat().st_size and t.stat().st_mtime >= f.stat().st_mtime:
+        # Copy only when the target is missing or older. A size difference alone must not trigger a
+        # copy: on restore, a longer local file (progress made since the last sync) would be
+        # overwritten by the shorter Drive copy. The 1 s slack covers coarse Drive timestamps.
+        if t.exists() and t.stat().st_mtime >= f.stat().st_mtime - 1:
             continue
         t.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(f, t)

@@ -159,5 +159,20 @@ def test_panel_plan_and_sync(tmp_path):
     (src / "v3").mkdir(parents=True)
     (src / "v3" / "a.jsonl").write_text("1\n")
     assert vp.sync(src, dst) == 1 and vp.sync(src, dst) == 0  # second pass copies nothing
+    import os
+    import time
+    later = time.time() + 10
     (src / "v3" / "a.jsonl").write_text("1\n2\n")
-    assert vp.sync(src, dst) == 1  # a grown file is copied again
+    os.utime(src / "v3" / "a.jsonl", (later, later))
+    assert vp.sync(src, dst) == 1  # a grown, newer file is copied again
+
+    # restore direction: older Drive copy must not overwrite a longer, newer local file
+    drive, local = tmp_path / "drive", tmp_path / "local"
+    (drive / "v3").mkdir(parents=True)
+    (local / "v3").mkdir(parents=True)
+    (drive / "v3" / "b.jsonl").write_text("1\n")
+    old = time.time() - 100
+    os.utime(drive / "v3" / "b.jsonl", (old, old))
+    (local / "v3" / "b.jsonl").write_text("1\n2\n3\n")
+    assert vp.sync(drive, local) == 0
+    assert (local / "v3" / "b.jsonl").read_text() == "1\n2\n3\n"
