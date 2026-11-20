@@ -1,0 +1,223 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs,amsmath,hyperref}
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+
+
+\newlength{\armcol}\setlength{\armcol}{0.75\textwidth}
+\title{Why Clinical LLMs Drop a Correct Diagnosis After a Follow-up Note}
+\author{Anonymous submission}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+When a language model changes a correct diagnosis after a follow-up note is added to a case, the change can come from four sources: sampling noise, any added text, what the note says, and who is said to have written it. We separate them with matched control arms on 400 public case reports with Gemma 4 12B and Llama 3.1 8B, and on 150 MIMIC-IV-Note cases with Claude Sonnet 5. Re-asking the same question changes 2.6\% and 4.8\% of the correct answers of the two open models. A neutral line with no clinical content changes 22.8\% and 26.5\%. A note that asserts a wrong diagnosis changes 69.4\% and 83.1\%. Notes that restate one lab value or describe a treatment show no clear excess over the neutral line. Attributing the same assertion to an attending physician does not raise the change rate in any of the three models. The difference from the unattributed version is $-8.3$ points (95\% CI $-13.9$ to $-3.7$) for Gemma 4, $-1.3$ ($-5.2$ to $2.6$) for Llama 3.1, and $-9.8$ ($-19.7$ to $0.0$) for Claude on MIMIC. We therefore do not call this behavior sycophancy. The results cover only cases the model first answers correctly, three models, and judges that no clinician has validated.
+\end{abstract}
+
+\section{Introduction}
+
+A clinician adds one line to a chart, and the model's diagnosis changes. Studies of medical sycophancy ask how often a model gives up a correct answer under pushback, fabricated evidence or persuasion \citep{christophe2026overalignment,peng2026sycoevalem,ping2026whyllmsgivein}. A change of this kind need not be deference. A model sampled twice can answer differently, and \citet{christophe2026overalignment} discount flips that happen at random. A model shown an irrelevant sentence can answer differently \citep{vishwanath2025distracted,yang2026compared}. A model shown a true new finding should answer differently. A change after a misleading note counts as deference only to the extent that it exceeds these other changes.
+
+We measure how much exceeds them. For each case a model answers correctly, we add one of several notes and count how often the answer changes. The arms are a plain re-ask, a neutral line, a helpful note with one true new finding, five kinds of misleading note, and three framings of one wrong diagnosis (unattributed, attributed to an attending physician, attributed to a nursing note). Every misleading note is written by a different model family from the one it is tested on, checked against explicit construction rules, and checked again by a second model.
+
+We report three findings.
+\begin{itemize}
+\item A neutral line changes 22.8\% of correct answers for Gemma 4 and 26.5\% for Llama 3.1, against 2.6\% and 4.8\% for a re-ask. Added text alone moves these models.
+\item Notes that name a diagnosis move answers much more than notes that restate a lab value or describe a treatment. Only the specialist-opinion category (ISO) shows a clear excess over the neutral line in both open models, and the lab-value and treatment categories show none.
+\item Attributing a wrong diagnosis to an attending physician does not make a model follow it more. Gemma 4 follows the unattributed version more often, and Llama 3.1 and Claude show no increase.
+\end{itemize}
+We do not claim that models are never deferential to authority. We claim that this test, with this wording of the attribution, finds no such effect in three models.
+
+\section{Related Work}
+
+\textbf{Sycophancy.} \citet{sharma2023sycophancy} investigate how common sycophancy is in models finetuned with human feedback, and \citet{wei2023synthetic} propose a synthetic-data intervention to reduce it. Multi-turn benchmarks follow the same question over a dialogue: \citet{liu2025truthdecay} introduce a benchmark for sycophancy in extended dialogues, and \citet{hong2025syconbench} introduce SYCON Bench with turn-of-flip and number-of-flip metrics. Our setting is one added note, not a dialogue.
+
+\textbf{Medical sycophancy.} \citet{christophe2026overalignment} propose an adjusted score on medical multiple-choice questions that discounts answer flips that happen at random. \citet{peng2026sycoevalem} test robustness to adversarial patient persuasion in simulated emergency visits. \citet{ping2026whyllmsgivein} study when models abandon a correct medical answer under pushback, varying the user's role and the evidence the user supplies. We share the question and differ in the controls: our arms separate resampling, added text, and content, and our attribution arms hold the content fixed.
+
+\textbf{Irrelevant and incidental information.} \citet{vishwanath2025distracted} build USMLE-style questions with embedded distractions and report that the distractions reduce accuracy. \citet{vishwanath2026incidental} test whether incidental information enters generated clinical documentation. \citet{gourabathina2025medperturb} perturb the gender, style and format of clinical contexts. Our neutral arm is the same kind of manipulation, applied to an added note.
+
+\textbf{Baselines for counterfactual prompting.} \citet{yang2026compared} argue that an effect of a counterfactual edit cannot be attributed to the edit without a baseline of meaning-preserving changes, and they use a paraphrase control and a fixed irrelevant sentence. Our re-ask and neutral arms play these two roles.
+
+\textbf{Context-aware decoding.} \citet{shi2024cad} contrast output probabilities with and without the context to reduce unfaithful generation. \citet{tao2026noworse} name neutral regression, where a model overwrites an already-correct answer when given uninformative context, and propose a gated decoder. Our drift measure on baseline-correct cases corresponds to this, and our neutral arm measures it for a note with no clinical content.
+
+\section{Design}
+
+\subsection{Measurement}
+Each model first answers the case alone and gives one diagnosis. A judge compares it with the reference diagnosis under a fixed binary rubric. We keep only the cases it answers correctly. For each kept case we add one note and ask again, and the judge compares the new diagnosis with the model's own baseline diagnosis. We call the case \emph{drifted} when the judge says they differ. Drift is the share of drifted cases in an arm. The excess over neutral is the arm's drift minus the neutral arm's drift on the same cases.
+
+\subsection{Arms}
+Table~\ref{tab:arms} lists the arms. The five misleading categories are VCS (vague contradictory statement), ISO (incorrect specialist opinion), PLV (single lab value), MMS (misleading medication suggestion) and SNHR (informal handoff relaying a family report). Every arm uses the same prompt, which shows the case evidence, then the note under the heading ``Follow-up note,'' then asks for the single most likely diagnosis in a fixed format. The re-ask arm repeats the baseline prompt. The neutral arm uses one of 16 fixed lines with no clinical content, chosen by a hash of the case identifier. The helpful arm adds one true finding consistent with the reference diagnosis and runs on all cases.
+
+\begin{table}[t]
+\centering
+\caption{Arms. Each category note is at most 40 words and one line, and must not name the reference diagnosis.}
+\label{tab:arms}
+\small
+\begin{tabular}{@{}lp{\armcol}@{}}
+\toprule
+Arm & Content \\
+\midrule
+R & Baseline prompt repeated (resampling noise) \\
+N & One of 16 fixed neutral lines \\
+H & One true new finding supporting the reference diagnosis \\
+VCS & A clinician voices non-specific unease; no specialty, no number, no diagnosis \\
+ISO & A note from a named specialty asserting a wrong diagnosis; no number \\
+PLV & Restates exactly one lab value with no interpretation \\
+MMS & States a medication or treatment action; names no diagnosis \\
+SNHR & Relays what a family member or caregiver said; names no specialty \\
+A & ``Findings are most consistent with X.'' \\
+B & ``Attending physician: Findings are most consistent with X.'' \\
+C & ``Nursing note: Findings are most consistent with X.'' \\
+A$_h$, B$_h$, C$_h$ & As A, B, C with ``could be consistent with'' (exploratory) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Note generation and checks}
+The wrong diagnosis X is one plausible alternative per case, produced once and held fixed across arms A, B and C. A generator model writes X and the category notes. Each note is tested against rules for its category, for example that a PLV note contains exactly one number, names a lab and carries no interpretation, and that an ISO note names a specialty and contains no digit. A failing note is regenerated up to three times, with the failed rules given back to the generator. A second model of a different family then answers yes or no to whether each note meets its category description, and to whether X is a real condition that is not a synonym or parent of the reference diagnosis. Notes that fail either step are dropped from that arm, which is why arm sizes differ. Appendix~\ref{app:pass} gives pass rates.
+
+\subsection{Models and cases}
+\textbf{Public cases.} We sample 400 cases from the test split of MedCaseReasoning \citep{wu2025medcasereasoning}, with at most three per diagnosis. We keep presentations of 60 to 700 words with a diagnosis of at most eight words that does not appear in the presentation. Gemma 4 12B instruction-tuned \citep{gemma2026gemma4} and Llama 3.1 8B Instruct \citep{grattafiori2024llama3} decode greedily with at most 160 new tokens. Notes come from Qwen2.5-7B-Instruct \citep{qwen2025qwen25}, which belongs to neither tested family. Verification and judging use phi-4 \citep{abdin2024phi4}.
+
+\textbf{MIMIC cases.} We use 150 cases from MIMIC-IV-Note \citep{johnson2023mimicivnote,johnson2023mimiciv}, accessed under the PhysioNet credentialed data use agreement. Evidence is cut to 800 words. The tested model is Claude Sonnet 5 \citep{anthropic2026sonnet5} with thinking disabled and 500 tokens for the baseline and re-ask, 300 for note arms. Claude Haiku 5.5 writes and verifies the notes, and Claude Sonnet 5 judges. Note text and model outputs from MIMIC stay on the authors' machine, and the only external calls go to an API configured for zero data retention. Because the generator, the tested model and the judge share a family on MIMIC, that run is a replication with a stated confound, not a cross-family test. It generates only X and ISO notes, to fit the API budget.
+
+\subsection{Statistics}
+We report intervals for differences from a case-level bootstrap with 10000 resamples. For each framing contrast we count discordant pairs and report an exact McNemar test, with Holm correction over the two contrasts of a family. The protocol, with the list of changes made after the first runs, is in the supplement. The hedged arms were added after we saw the primary framing results and are exploratory. All other arms were specified before the runs.
+
+\section{Results}
+
+\subsection{Resampling noise and added text}
+Table~\ref{tab:noise} gives drift for the re-ask and neutral arms. Re-asking changes 2.6\% of Gemma 4's correct answers and 4.8\% of Llama 3.1's. A neutral line changes 22.8\% and 26.5\%. The neutral arm exceeds the re-ask arm by 20.2 points (CI 12.3 to 28.1) for Gemma 4 and by 21.7 points (CI 12 to 33) for Llama 3.1. For Claude on MIMIC the gap is 5.2 points with a CI of $-1.3$ to 13.0, so the data do not show that added text alone moves Claude on these notes.
+
+\begin{table}[t]
+\centering
+\caption{Drift (\% of baseline-correct cases whose answer changes). $n$ is the number of baseline-correct cases.}
+\label{tab:noise}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Model (cases) & $n$ & Re-ask & Neutral & Neutral minus re-ask [95\% CI] \\
+\midrule
+Gemma 4 12B (public) & 114 & 2.6 & 22.8 & 20.2 [12.3, 28.1] \\
+Llama 3.1 8B (public) & 83 & 4.8 & 26.5 & 21.7 [12, 33] \\
+Claude Sonnet 5 (MIMIC) & 77 & 3.9 & 9.1 & 5.2 [$-1.3$, 13.0] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The open models decode greedily, and their re-ask drift is still above zero. Differences in padding and batch composition in half precision are one candidate cause.
+
+\subsection{What the note says}
+Table~\ref{tab:cats} gives the excess over the neutral arm for the five categories. In Gemma 4, VCS and ISO notes add 13.8 and 14.8 points, and SNHR adds 9.2 with a lower bound near zero. PLV and MMS add 1.1 and $-1.1$ points, with intervals that include zero. In Llama 3.1, ISO adds 34.6 points (CI 20 to 47) and no other category has an interval that excludes zero. We ran five category comparisons per model without correction, so the VCS and SNHR results in Gemma 4 should be read with that in mind. On MIMIC, Claude shows an ISO excess of 34.6 points (CI 11.5 to 53.8) on 26 cases.
+
+\begin{table}[t]
+\centering
+\caption{Excess over the neutral arm, in points of drift [95\% CI]. $n$ is the number of cases with a verified note.}
+\label{tab:cats}
+\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+ & \multicolumn{2}{c}{Gemma 4 12B} & \multicolumn{2}{c}{Llama 3.1 8B} \\
+Category & $n$ & Excess [CI] & $n$ & Excess [CI] \\
+\midrule
+VCS & 87 & 13.8 [3.4, 24.1] & 65 & 7.7 [$-1$, 17] \\
+ISO & 108 & 14.8 [6.5, 24.1] & 78 & 34.6 [20, 47] \\
+PLV & 93 & 1.1 [$-5.4$, 8.6] & 66 & 4.5 [$-4$, 14] \\
+MMS & 89 & $-1.1$ [$-10.1$, 7.9] & 60 & 3.3 [$-7$, 13] \\
+SNHR & 109 & 9.2 [0.9, 17.4] & 79 & 5.1 [$-4$, 14] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Who is said to have written the note}
+Table~\ref{tab:framing} gives the three framings of the same wrong diagnosis. All three move answers a great deal. The unattributed version changes 69.4\% of Gemma 4's answers, 83.1\% of Llama 3.1's and 78.7\% of Claude's on MIMIC.
+
+\begin{table}[t]
+\centering
+\caption{Framing arms. Drift in \%, and difference from the unattributed arm in points [95\% CI] with discordant pairs (more drift / less drift) and Holm-corrected exact $p$.}
+\label{tab:framing}
+\small
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+Model & Arm & $n$ & Drift & Difference from A [CI]; pairs; Holm $p$ \\
+\midrule
+Gemma 4 & A, unattributed & 108 & 69.4 & \\
+ & B, attending & 108 & 61.1 & $-8.3$ [$-13.9$, $-3.7$]; 0/9; 0.0039 \\
+ & C, nursing & 108 & 49.1 & $-20.4$ [$-28.7$, $-13.0$]; 1/23; $<$0.001 \\
+Llama 3.1 & A, unattributed & 77 & 83.1 & \\
+ & B, attending & 77 & 81.8 & $-1.3$ [$-5.2$, 2.6]; 1/2; 1.0 \\
+ & C, nursing & 77 & 80.5 & $-2.6$ [$-7.8$, 2.6]; 1/3; 1.0 \\
+Claude (MIMIC) & A, unattributed & 61 & 78.7 & \\
+ & B, attending & 61 & 68.9 & $-9.8$ [$-19.7$, 0.0]; 2/8; 0.1094 \\
+ & C, nursing & 61 & 57.4 & $-21.3$ [$-31.1$, $-11.5$]; 0/13; 0.0004 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+An attending prefix never raises drift. Gemma 4 follows the attending version less often than the bare statement (8.3 points, Holm $p = 0.0039$), and the nursing version less often still. Llama 3.1 is near a ceiling at 83.1\% in arm A, with only three discordant pairs in the attending contrast, so its null is weakly informative. The CI for the attending contrast excludes an increase of more than 2.6 points. Claude on MIMIC goes the same direction as Gemma 4, with a wider interval.
+
+\textbf{Hedged wording (exploratory).} We repeated the test with ``could be consistent with'' to leave room below the ceiling. Drift falls to 45.4\%, 38.0\% and 35.2\% in Gemma 4 for unattributed, attending and nursing, and to 64.9\%, 66.2\% and 61.0\% in Llama 3.1. The attending contrast is $-7.4$ points (CI $-13.9$ to $-0.9$, Holm $p = 0.0574$) in Gemma 4 and 1.3 points (CI $-2.6$ to 6.5, Holm $p = 1.0$) in Llama 3.1. The hedged result matches the primary one in both models. The Gemma 4 contrasts are borderline after correction.
+
+\textbf{Following the suggestion.} A string match for the inserted diagnosis in the answer shows that most drift in the unattributed arm is adoption of the suggested diagnosis: 66 of 108 answers in Gemma 4 and 66 of 77 in Llama 3.1. For attending and nursing the counts are 61 and 47 of 108 in Gemma 4, and 62 and 61 of 77 in Llama 3.1. This match misses paraphrases and has no test attached.
+
+\subsection{A true new finding}
+The helpful note supplies one true finding. It turns a wrong baseline answer into a correct one in 19.7\% of 213 cases for Gemma 4 and 19.4\% of 242 cases for Llama 3.1. Among baseline-correct cases, the answer is still correct afterwards in 79.8\% of 94 cases for Gemma 4 and 78.5\% of 65 for Llama 3.1. These measure a different outcome from drift and are not comparable to the neutral rate. A true added finding rescues about one wrong answer in five.
+
+\section{Discussion}
+
+An answer change after a follow-up note mixes four effects, and in these data the first two are large. A re-ask changes few correct answers. A neutral line changes more than a fifth of the correct answers of both open models. For these two models, a drift rate measured after a misleading note without a neutral arm would overstate the effect of the note's content by roughly the neutral rate. The Claude result on MIMIC is smaller (9.1\%), and its interval against the re-ask rate includes zero, so the added-text effect varies across models.
+
+The largest content effects come from notes that name a diagnosis. Notes that supply a number or a treatment without a diagnosis add little. A note that only voices doubt (VCS) also moved Gemma 4, by 13.8 points, but not clearly Llama 3.1. This pattern fits models that update toward a stated candidate. We did not test that explanation directly, and the adoption counts support it only for the framing arms.
+
+The attribution result runs against a deference account. Under one fixed wording, naming a physician as the source did not increase following in any of three models, and in Gemma 4 it decreased following. One reading is that a bare statement of findings looks like part of the case, while an attributed one looks like an opinion to weigh. The data do not test that reading. Other manipulations of authority, such as credentials, seniority or a prior record of being correct, may behave differently.
+
+\section{Limitations}
+
+\textbf{Judges.} No clinician has reviewed the judge decisions, and we did not measure agreement between the two judges. On MIMIC the judge is Claude and the tested model is Claude. Reading 25 of Gemma 4's baseline answers that the phi-4 judge marked wrong, we found by our non-clinician reading about 3 to 4 that looked like a parent or subtype of the reference diagnosis. The strict rubric therefore undercounts correct baselines, and all arm results apply to cases answered correctly under it.
+
+\textbf{Sample size.} The baseline-correct sets have 77 to 114 cases, and the category arms have between 26 and 109. The intervals are wide, and the Llama 3.1 framing contrasts have only a handful of discordant pairs. We ran no power calculation before the runs.
+
+\textbf{Generator confound on MIMIC.} Claude wrote the MIMIC notes and Claude is the tested model. A same-family advantage or disadvantage could move the MIMIC numbers in either direction. We did not run a MIMIC arm with an open-model generator, and we generate only ISO and X notes there.
+
+\textbf{Scope of the attribution test.} We tested one template and two prefixes. The primary framing arms are near a ceiling in Llama 3.1. The hedged arms address that and are exploratory, and their Gemma 4 contrasts are borderline after correction.
+
+\textbf{Data and models.} Public case reports are not chart notes, and MIMIC results come from one closed model. We tested two open models of 8B and 12B parameters. We did not test thinking modes, larger models, or other clinical settings.
+
+\textbf{Protocol.} The protocol is a dated document released with the paper, not an entry in a public registry. Its list of changes after the first runs is in the supplement.
+
+\section{Conclusion}
+After a follow-up note, a clinical model's changed diagnosis is only partly a response to what the note says: a neutral line alone changes more than a fifth of the correct answers of two open models, and a re-ask changes few. Notes that name a diagnosis move answers most. Naming an attending as the author did not increase following in Gemma 4 12B, Llama 3.1 8B, or Claude Sonnet 5 on MIMIC. Studies that read answer changes as deference should add a neutral-line control and an attribution contrast before doing so. An open question is whether stronger authority cues than a one-word prefix change the result.
+
+\bibliography{refs}
+
+\appendix
+\section{Note pass rates}\label{app:pass}
+Table~\ref{tab:pass} gives, for the public cases, the share of notes that met all category rules within three attempts and the mean number of attempts. The phi-4 verifier answered yes to 97.6\% of 2124 notes. In a calibration check on a sample of 96, it answered yes to 96 of 96 notes judged against their own category and to 11 of 96 judged against a wrong category. It therefore separates categories but is not shown to catch subtle rule violations.
+
+\begin{table}[h]
+\centering
+\caption{Note generation on the public cases (Qwen2.5-7B-Instruct, up to three attempts).}
+\label{tab:pass}
+\small
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Kind & Notes & Passed rules (\%) & Mean attempts \\
+\midrule
+X (wrong diagnosis) & 400 & 96.3 & 1.08 \\
+ISO & 385 & 94.3 & 1.16 \\
+SNHR & 385 & 98.7 & 1.09 \\
+PLV & 385 & 89.6 & 1.25 \\
+VCS & 385 & 84.9 & 1.54 \\
+MMS & 385 & 84.2 & 1.66 \\
+H (helpful) & 400 & 76.7 & 1.49 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Data and code}
+The public cases are from a public dataset, and the generated notes, prompts, rules and code will be released with the paper. MIMIC-IV-Note requires credentialed access, so we release only aggregate results for those cases. The Claude API run used 1430 calls.
+
+\end{document}

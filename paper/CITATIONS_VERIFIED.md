@@ -1,0 +1,41 @@
+# Citations verified
+
+Checked 2026-11 by opening the primary page (arXiv abstract plus HTML full text, ACL Anthology, PMC, PhysioNet, or the vendor page) through the web-fetch agent. A fetch summary can be wrong, so numbers and quotes from sources are not used in the paper beyond what the log shows. The PDF versions of arXiv and ACL papers came back as unreadable binary, so quotes come from the arXiv HTML versions or the abstract pages. A reviewer-level second pass (reopen each URL) has not been done; do that before submitting.
+
+Format: key | status | url | claim supported | passage location | short quote | access date
+
+| key | status | url | claim supported | passage location | short quote | access date |
+|---|---|---|---|---|---|---|
+| sharma2023sycophancy | VERIFIED | https://arxiv.org/abs/2310.13548 | investigates how prevalent sycophancy is in models finetuned with human feedback | abstract (HTML v4) | We investigate the prevalence of sycophancy in models whose finetuning used human feedback | 2026-11 |
+| wei2023synthetic | VERIFIED | https://arxiv.org/abs/2308.03958 | proposes a synthetic-data intervention to reduce sycophancy | abstract (HTML v2) | propose a simple synthetic-data intervention to reduce this behavior | 2026-11 |
+| liu2025truthdecay | VERIFIED | https://arxiv.org/abs/2503.11656 | introduces a benchmark for sycophancy in extended dialogues | abstract (HTML v1) | a benchmark specifically designed to evaluate sycophancy in extended dialogues | 2026-11 |
+| hong2025syconbench | VERIFIED | https://aclanthology.org/2025.findings-emnlp.121/ | introduces SYCON Bench, multi-turn sycophancy benchmark with Turn of Flip and Number of Flip | abstract and section 3 (arXiv v4 HTML) | a benchmark designed to evaluate and quantify sycophancy in real-world settings | 2026-11 |
+| christophe2026overalignment | VERIFIED | https://arxiv.org/abs/2601.18334 | proposes the Adjusted Sycophancy Score on medical multiple-choice questions | abstract and section 1 (HTML v1) | We propose the Adjusted Sycophancy Score | 2026-11 |
+| peng2026sycoevalem | VERIFIED | https://arxiv.org/abs/2601.16529 | multi-agent simulation framework testing robustness to adversarial patient persuasion in emergency medicine | abstract (HTML v4) | We developed SycoEval-EM, a multi-agent simulation framework | 2026-11 |
+| ping2026whyllmsgivein | VERIFIED | https://arxiv.org/abs/2608.01017 | studies abandonment of a correct medical answer under user pushback, varying user role, fabricated evidence and other factors | abstract (HTML v2) | We study this failure as medical sycophancy | 2026-11 |
+| vishwanath2025distracted | VERIFIED | https://arxiv.org/abs/2504.01201 | develops MedDistractQA, USMLE-style questions with embedded distractions, which reduce accuracy | abstract (HTML v1) | we developed MedDistractQA, a benchmark using USMLE-style questions | 2026-11 |
+| vishwanath2026incidental | VERIFIED | https://arxiv.org/abs/2610.08585 | paired benchmarks testing whether incidental information enters generated clinical documentation | main text (HTML v2) | paired benchmarks that test whether incidental information enters clinical documentation | 2026-11 |
+| gourabathina2025medperturb | VERIFIED | https://arxiv.org/abs/2506.17163 | dataset of clinical contexts under gender, style and format perturbations, with LLM outputs and expert reads | abstract (HTML v1) | a dataset designed to systematically evaluate medical LLMs under controlled perturbations of clinical input | 2026-11 |
+| yang2026compared | VERIFIED | https://arxiv.org/abs/2605.01048 | argues counterfactual prompting effects need a baseline of meaning-preserving edits; uses a paraphrase control and a fixed irrelevant sentence | sections 3.2 and 3.4 (HTML v2) | prepending a fixed, topically irrelevant sentence to the original prompt | 2026-11 |
+| shi2024cad | VERIFIED (landing page and arXiv HTML introduction) | https://aclanthology.org/2024.naacl-short.69/ | context-aware decoding contrasts output probabilities with and without context, no extra training | abstract | we present context-aware decoding (CAD), which follows a contrastive output distribution | 2026-11 |
+| tao2026noworse | VERIFIED (ACL landing page, arXiv v1 HTML; ACL PDF unread) | https://aclanthology.org/2026.findings-acl.473/ | defines neutral regression, overwriting an already-correct answer, and proposes a gated decoder | section 1 (arXiv v1) | the model overwrites an already-correct answer | 2026-11 |
+| johnson2023mimiciv | VERIFIED | https://pmc.ncbi.nlm.nih.gov/articles/PMC9810617/ | describes the release of MIMIC-IV from the Beth Israel Deaconess Medical Center record | abstract | intended to support a wide array of research studies | 2026-11 |
+| johnson2023mimicivnote | VERIFIED | https://physionet.org/content/mimic-iv-note/ | collection of deidentified free-text notes linked to MIMIC-IV; credentialed access under a data use agreement | dataset page abstract | a collection of deidentified free-text clinical notes | 2026-11 |
+| wu2025medcasereasoning | VERIFIED | https://arxiv.org/abs/2505.11733 | open-access dataset of diagnostic questions built from case reports | abstract | the first open-access dataset for evaluating LLMs on their ability to align | 2026-11 |
+| grattafiori2024llama3 | VERIFIED | https://arxiv.org/abs/2407.21783 | presents the Llama 3 foundation models | abstract | This paper presents a new set of foundation models, called Llama 3 | 2026-11 |
+| gemma2026gemma4 | VERIFIED (abstract only) | https://arxiv.org/abs/2607.02770 | open-weight Gemma 4 family with a 12B model | abstract | unified, encoder-free architecture for our 12B model | 2026-11 |
+| qwen2025qwen25 | VERIFIED | https://arxiv.org/abs/2412.15115 | introduces the Qwen2.5 model series | abstract | we introduce Qwen2.5, a comprehensive series of large language models | 2026-11 |
+| abdin2024phi4 | VERIFIED | https://arxiv.org/abs/2412.08905 | presents phi-4, a 14-billion parameter model | abstract | We present phi-4, a 14-billion parameter language model | 2026-11 |
+| anthropic2026sonnet5 | VERIFIED | https://platform.claude.com/docs/en/models/sonnet-5/overview | model identifier claude-sonnet-5 for Claude Sonnet 5 | model page | Model ID: claude-sonnet-5 | 2026-11 |
+
+## Notes the authors must read
+
+- sharma2023sycophancy, wei2023synthetic, liu2025truthdecay, christophe2026overalignment, peng2026sycoevalem, ping2026whyllmsgivein, vishwanath2025distracted, vishwanath2026incidental, gourabathina2025medperturb, wu2025medcasereasoning and the three model reports are cited as arXiv preprints. A published version may exist for some (Sharma et al. at ICLR 2024 and Gourabathina et al. at FAccT 2025 are my recollection) but the page check did not confirm it, so none is claimed. The ACM page for the FAccT 2025 paper returned 403.
+- yang2026compared lists "Published as a conference paper at COLM 2026" in the arXiv comments; it is cited as arXiv because the proceedings page was not opened.
+- ping2026whyllmsgivein lists "Findings of EMNLP 2026" in the arXiv comments; cited as arXiv for the same reason.
+- hong2025syconbench: the ACL Anthology lists four authors (Hong, Byun, Kim, Shu). The arXiv page lists Jinho D. Choi as a fifth. The bib follows the ACL proceedings. The Emory lab page, which I only saw in a search snippet, says an author was left out of the proceedings by omission. Check which list you want.
+- shi2024cad: arXiv prints the last author as "Scott Wen-tau Yih"; the ACL Anthology prints "Wen-tau Yih". The bib follows the ACL entry.
+- johnson2023mimiciv: the PMC page says the article has two corrections (Sci Data 2023;10:31 and 10:219). The bib cites the original article as printed on PMC.
+- MedCaseReasoning license: the Hugging Face card shows an MIT tag, while your note in this session says the card states CC BY 4.0. The paper says only that the dataset is public; confirm the license before release.
+- Not cited, because no primary page was opened: Efron and Tibshirani (bootstrap), Wilson (1927), Holm (1979). The paper names these methods without a citation. Add verified references if a reviewer asks.
+- Not cited: Perez et al. 2022 (passage found did not mention sycophancy), Shi et al. NAACL page numbers were read from the landing page only, and the Applied Sciences version of MedQA (MedQA is not used in this paper).
