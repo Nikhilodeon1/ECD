@@ -1,0 +1,315 @@
+{
+  "script": "src/v3_summary.py",
+  "judged_file": "judged__claude-claude-sonnet-5__claude-claude-sonnet-5.jsonl",
+  "by_source": {
+    "all": {
+      "n_cases": 150,
+      "baseline_correct": 77,
+      "baseline_accuracy": 0.513,
+      "arms": {
+        "R": {
+          "n": 77,
+          "drift": 0.039,
+          "wilson": [
+            0.013,
+            0.108
+          ],
+          "excess_over_neutral": -0.052,
+          "excess_ci": [
+            -0.13,
+            0.013
+          ]
+        },
+        "N": {
+          "n": 77,
+          "drift": 0.091,
+          "wilson": [
+            0.045,
+            0.176
+          ]
+        },
+        "VCS": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "ISO": {
+          "n": 26,
+          "drift": 0.423,
+          "wilson": [
+            0.255,
+            0.611
+          ],
+          "excess_over_neutral": 0.346,
+          "excess_ci": [
+            0.115,
+            0.538
+          ]
+        },
+        "PLV": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "MMS": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "SNHR": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "A_unattributed": {
+          "n": 61,
+          "drift": 0.787,
+          "wilson": [
+            0.669,
+            0.871
+          ],
+          "excess_over_neutral": 0.705,
+          "excess_ci": [
+            0.59,
+            0.82
+          ]
+        },
+        "B_attending": {
+          "n": 61,
+          "drift": 0.689,
+          "wilson": [
+            0.564,
+            0.791
+          ],
+          "excess_over_neutral": 0.607,
+          "excess_ci": [
+            0.475,
+            0.721
+          ]
+        },
+        "C_nursing": {
+          "n": 61,
+          "drift": 0.574,
+          "wilson": [
+            0.449,
+            0.69
+          ],
+          "excess_over_neutral": 0.492,
+          "excess_ci": [
+            0.361,
+            0.623
+          ]
+        },
+        "A_hedged": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "B_hedged_attending": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "C_hedged_nursing": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        }
+      },
+      "framing_contrasts": [
+        {
+          "contrast": "B_attending minus A_unattributed",
+          "n": 61,
+          "diff": -0.098,
+          "ci": [
+            -0.197,
+            0.0
+          ],
+          "discordant_up": 2,
+          "discordant_down": 8,
+          "p_exact": 0.1094,
+          "p_holm": 0.1094
+        },
+        {
+          "contrast": "C_nursing minus A_unattributed",
+          "n": 61,
+          "diff": -0.213,
+          "ci": [
+            -0.311,
+            -0.115
+          ],
+          "discordant_up": 0,
+          "discordant_down": 13,
+          "p_exact": 0.0002,
+          "p_holm": 0.0004
+        }
+      ],
+      "framing_contrasts_hedged": [],
+      "helpful": {
+        "corrects_wrong": {
+          "n": 0,
+          "rate": null
+        },
+        "stays_correct": {
+          "n": 0,
+          "rate": null
+        }
+      }
+    },
+    "mimic-iv-note": {
+      "n_cases": 150,
+      "baseline_correct": 77,
+      "baseline_accuracy": 0.513,
+      "arms": {
+        "R": {
+          "n": 77,
+          "drift": 0.039,
+          "wilson": [
+            0.013,
+            0.108
+          ],
+          "excess_over_neutral": -0.052,
+          "excess_ci": [
+            -0.13,
+            0.013
+          ]
+        },
+        "N": {
+          "n": 77,
+          "drift": 0.091,
+          "wilson": [
+            0.045,
+            0.176
+          ]
+        },
+        "VCS": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "ISO": {
+          "n": 26,
+          "drift": 0.423,
+          "wilson": [
+            0.255,
+            0.611
+          ],
+          "excess_over_neutral": 0.346,
+          "excess_ci": [
+            0.115,
+            0.538
+          ]
+        },
+        "PLV": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "MMS": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "SNHR": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "A_unattributed": {
+          "n": 61,
+          "drift": 0.787,
+          "wilson": [
+            0.669,
+            0.871
+          ],
+          "excess_over_neutral": 0.705,
+          "excess_ci": [
+            0.59,
+            0.82
+          ]
+        },
+        "B_attending": {
+          "n": 61,
+          "drift": 0.689,
+          "wilson": [
+            0.564,
+            0.791
+          ],
+          "excess_over_neutral": 0.607,
+          "excess_ci": [
+            0.475,
+            0.721
+          ]
+        },
+        "C_nursing": {
+          "n": 61,
+          "drift": 0.574,
+          "wilson": [
+            0.449,
+            0.69
+          ],
+          "excess_over_neutral": 0.492,
+          "excess_ci": [
+            0.361,
+            0.623
+          ]
+        },
+        "A_hedged": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "B_hedged_attending": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        },
+        "C_hedged_nursing": {
+          "n": 0,
+          "drift": null,
+          "wilson": null
+        }
+      },
+      "framing_contrasts": [
+        {
+          "contrast": "B_attending minus A_unattributed",
+          "n": 61,
+          "diff": -0.098,
+          "ci": [
+            -0.197,
+            0.0
+          ],
+          "discordant_up": 2,
+          "discordant_down": 8,
+          "p_exact": 0.1094,
+          "p_holm": 0.1094
+        },
+        {
+          "contrast": "C_nursing minus A_unattributed",
+          "n": 61,
+          "diff": -0.213,
+          "ci": [
+            -0.311,
+            -0.115
+          ],
+          "discordant_up": 0,
+          "discordant_down": 13,
+          "p_exact": 0.0002,
+          "p_holm": 0.0004
+        }
+      ],
+      "framing_contrasts_hedged": [],
+      "helpful": {
+        "corrects_wrong": {
+          "n": 0,
+          "rate": null
+        },
+        "stays_correct": {
+          "n": 0,
+          "rate": null
+        }
+      }
+    }
+  },
+  "note": "drift = judge says the arm answer differs from the baseline answer; baseline-correct cases only"
+}

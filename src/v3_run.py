@@ -19,6 +19,7 @@ Outputs hold note text, so they live under data/ and never go to git.
 """
 import argparse
 import json
+import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -125,11 +126,12 @@ def make_backend(spec: str, budget_usd: float | None = None, prime: str | None =
     if kind == "hf":
         from llm_clients import ChatClient
 
-        return ChatClient(name, batch_size=batch_size)
+        # ECD_HF_DTYPE=bfloat16 keeps a 3B model near 6 GB on a CPU-only laptop (auto means float32 there)
+        return ChatClient(name, batch_size=batch_size, dtype=os.environ.get("ECD_HF_DTYPE", "auto"))
     if kind == "open":
         from llm_clients import OpenJudgeClient
 
-        return OpenJudgeClient(name, **({"prime": prime} if prime else {}))
+        return OpenJudgeClient(name, dtype=os.environ.get("ECD_HF_DTYPE", "auto"), **({"prime": prime} if prime else {}))
     raise ValueError(f"unknown backend spec {spec!r}")
 
 
@@ -182,7 +184,9 @@ def _write_notes(path, cases_by_id, state, generator):
                             "attempts": st["attempts"], "generator": generator, "timestamp": now()})
 
 
-def run_notes(cases: list[dict], gen, out_path, generator: str, max_tries: int = 3, chunk: int = 64) -> None:
+def run_notes(cases: list[dict], gen, out_path, generator: str, max_tries: int = 3, chunk: int = 64,
+              cats: tuple = CATS, helpful: bool = True) -> None:
+    """cats / helpful restrict what is generated (a slow CPU run only needs the arms it will test)."""
     out_path = Path(out_path)
     by_id = {c["id"]: c for c in cases}
 
@@ -204,7 +208,7 @@ def run_notes(cases: list[dict], gen, out_path, generator: str, max_tries: int =
     xs = {r["case_id"]: r["text"] for r in read_jsonl(out_path, guard=False) if r["kind"] == "X" and r["passed"]}
 
     # 2. five categories (need X)
-    for cat in CATS:
+    for cat in cats:
         for part in chunks(pending(cat, set(xs)), chunk):
             items = [{"key": (c["id"], cat), "case": c, "x": xs[c["id"]]} for c in part]
             state = run_validated(
@@ -216,7 +220,7 @@ def run_notes(cases: list[dict], gen, out_path, generator: str, max_tries: int =
             _write_notes(out_path, by_id, state, generator)
 
     # 3. helpful note (reuses the v2 prompt and diagnosis-leak check)
-    for part in chunks(pending("H"), chunk):
+    for part in chunks(pending("H") if helpful else [], chunk):
         items = [{"key": (c["id"], "H"), "case": c} for c in part]
         state = run_validated(
             gen, items,
@@ -354,6 +358,8 @@ def main() -> None:
     ap.add_argument("--arms", default="BASE", help="BASE | REST | comma list")
     ap.add_argument("--notes", help="notes file (default derived from --generator)")
     ap.add_argument("--verify-file", help="verify file; if given, only verified notes are used")
+    ap.add_argument("--cats", default=",".join(CATS), help="notes: categories to generate (default all five)")
+    ap.add_argument("--no-helpful", action="store_true", help="notes: skip the helpful note")
     ap.add_argument("--max-tries", type=int, default=3)
     ap.add_argument("--chunk", type=int, default=64)
     ap.add_argument("--workers", type=int, default=8)
@@ -374,7 +380,12 @@ def main() -> None:
             if args.dry_run:
                 print(f"notes: {len(cases)} cases -> about {len(cases) * 7} generations (+ retries)"); return
             backend = Lazy(lambda: make_backend(args.generator, args.budget_usd, batch_size=args.batch_size))
-            run_notes(cases, backend, notes_path, args.generator, args.max_tries, args.chunk)
+            cats = tuple(c for c in args.cats.split(",") if c)
+            bad = [c for c in cats if c not in CATS]
+            if bad:
+                raise SystemExit(f"unknown categories {bad}; choose from {CATS}")
+            run_notes(cases, backend, notes_path, args.generator, args.max_tries, args.chunk,
+                      cats=cats, helpful=not args.no_helpful)
         elif args.stage == "verify":
             backend = Lazy(lambda: make_backend(args.verifier, args.budget_usd, prime="Answer:", batch_size=args.batch_size))
             run_verify(cases, notes_path, backend, V3 / f"verify__{slug(args.generator)}__{slug(args.verifier)}.jsonl", args.chunk)
