@@ -1,0 +1,481 @@
+{
+  "script": "src/v3_summary.py",
+  "judged_file": "judged__hf-google-gemma-4-12B-it__open-microsoft-phi-4.jsonl",
+  "by_source": {
+    "all": {
+      "n_cases": 400,
+      "baseline_correct": 114,
+      "baseline_accuracy": 0.285,
+      "arms": {
+        "R": {
+          "n": 114,
+          "drift": 0.026,
+          "wilson": [
+            0.009,
+            0.075
+          ],
+          "excess_over_neutral": -0.202,
+          "excess_ci": [
+            -0.281,
+            -0.123
+          ]
+        },
+        "N": {
+          "n": 114,
+          "drift": 0.228,
+          "wilson": [
+            0.161,
+            0.313
+          ]
+        },
+        "VCS": {
+          "n": 87,
+          "drift": 0.368,
+          "wilson": [
+            0.274,
+            0.473
+          ],
+          "excess_over_neutral": 0.138,
+          "excess_ci": [
+            0.034,
+            0.241
+          ]
+        },
+        "ISO": {
+          "n": 108,
+          "drift": 0.37,
+          "wilson": [
+            0.285,
+            0.464
+          ],
+          "excess_over_neutral": 0.148,
+          "excess_ci": [
+            0.065,
+            0.241
+          ]
+        },
+        "PLV": {
+          "n": 93,
+          "drift": 0.226,
+          "wilson": [
+            0.153,
+            0.321
+          ],
+          "excess_over_neutral": 0.011,
+          "excess_ci": [
+            -0.054,
+            0.086
+          ]
+        },
+        "MMS": {
+          "n": 89,
+          "drift": 0.202,
+          "wilson": [
+            0.132,
+            0.297
+          ],
+          "excess_over_neutral": -0.011,
+          "excess_ci": [
+            -0.101,
+            0.079
+          ]
+        },
+        "SNHR": {
+          "n": 109,
+          "drift": 0.303,
+          "wilson": [
+            0.224,
+            0.395
+          ],
+          "excess_over_neutral": 0.092,
+          "excess_ci": [
+            0.009,
+            0.174
+          ]
+        },
+        "A_unattributed": {
+          "n": 108,
+          "drift": 0.694,
+          "wilson": [
+            0.602,
+            0.773
+          ],
+          "excess_over_neutral": 0.491,
+          "excess_ci": [
+            0.389,
+            0.593
+          ]
+        },
+        "B_attending": {
+          "n": 108,
+          "drift": 0.611,
+          "wilson": [
+            0.517,
+            0.698
+          ],
+          "excess_over_neutral": 0.407,
+          "excess_ci": [
+            0.306,
+            0.509
+          ]
+        },
+        "C_nursing": {
+          "n": 108,
+          "drift": 0.491,
+          "wilson": [
+            0.398,
+            0.584
+          ],
+          "excess_over_neutral": 0.287,
+          "excess_ci": [
+            0.185,
+            0.389
+          ]
+        },
+        "A_hedged": {
+          "n": 108,
+          "drift": 0.454,
+          "wilson": [
+            0.363,
+            0.548
+          ],
+          "excess_over_neutral": 0.25,
+          "excess_ci": [
+            0.148,
+            0.352
+          ]
+        },
+        "B_hedged_attending": {
+          "n": 108,
+          "drift": 0.38,
+          "wilson": [
+            0.294,
+            0.474
+          ],
+          "excess_over_neutral": 0.176,
+          "excess_ci": [
+            0.083,
+            0.269
+          ]
+        },
+        "C_hedged_nursing": {
+          "n": 108,
+          "drift": 0.352,
+          "wilson": [
+            0.268,
+            0.446
+          ],
+          "excess_over_neutral": 0.148,
+          "excess_ci": [
+            0.065,
+            0.231
+          ]
+        }
+      },
+      "framing_contrasts": [
+        {
+          "contrast": "B_attending minus A_unattributed",
+          "n": 108,
+          "diff": -0.083,
+          "ci": [
+            -0.139,
+            -0.037
+          ],
+          "discordant_up": 0,
+          "discordant_down": 9,
+          "p_exact": 0.0039,
+          "p_holm": 0.0039
+        },
+        {
+          "contrast": "C_nursing minus A_unattributed",
+          "n": 108,
+          "diff": -0.204,
+          "ci": [
+            -0.287,
+            -0.13
+          ],
+          "discordant_up": 1,
+          "discordant_down": 23,
+          "p_exact": 0.0,
+          "p_holm": 0.0
+        }
+      ],
+      "framing_contrasts_hedged": [
+        {
+          "contrast": "B_hedged_attending minus A_hedged",
+          "n": 108,
+          "diff": -0.074,
+          "ci": [
+            -0.139,
+            -0.009
+          ],
+          "discordant_up": 3,
+          "discordant_down": 11,
+          "p_exact": 0.0574,
+          "p_holm": 0.0574
+        },
+        {
+          "contrast": "C_hedged_nursing minus A_hedged",
+          "n": 108,
+          "diff": -0.102,
+          "ci": [
+            -0.185,
+            -0.019
+          ],
+          "discordant_up": 5,
+          "discordant_down": 16,
+          "p_exact": 0.0266,
+          "p_holm": 0.0532
+        }
+      ],
+      "helpful": {
+        "corrects_wrong": {
+          "n": 213,
+          "rate": 0.197
+        },
+        "stays_correct": {
+          "n": 94,
+          "rate": 0.798
+        }
+      }
+    },
+    "pubcase": {
+      "n_cases": 400,
+      "baseline_correct": 114,
+      "baseline_accuracy": 0.285,
+      "arms": {
+        "R": {
+          "n": 114,
+          "drift": 0.026,
+          "wilson": [
+            0.009,
+            0.075
+          ],
+          "excess_over_neutral": -0.202,
+          "excess_ci": [
+            -0.281,
+            -0.123
+          ]
+        },
+        "N": {
+          "n": 114,
+          "drift": 0.228,
+          "wilson": [
+            0.161,
+            0.313
+          ]
+        },
+        "VCS": {
+          "n": 87,
+          "drift": 0.368,
+          "wilson": [
+            0.274,
+            0.473
+          ],
+          "excess_over_neutral": 0.138,
+          "excess_ci": [
+            0.034,
+            0.241
+          ]
+        },
+        "ISO": {
+          "n": 108,
+          "drift": 0.37,
+          "wilson": [
+            0.285,
+            0.464
+          ],
+          "excess_over_neutral": 0.148,
+          "excess_ci": [
+            0.065,
+            0.241
+          ]
+        },
+        "PLV": {
+          "n": 93,
+          "drift": 0.226,
+          "wilson": [
+            0.153,
+            0.321
+          ],
+          "excess_over_neutral": 0.011,
+          "excess_ci": [
+            -0.054,
+            0.086
+          ]
+        },
+        "MMS": {
+          "n": 89,
+          "drift": 0.202,
+          "wilson": [
+            0.132,
+            0.297
+          ],
+          "excess_over_neutral": -0.011,
+          "excess_ci": [
+            -0.101,
+            0.079
+          ]
+        },
+        "SNHR": {
+          "n": 109,
+          "drift": 0.303,
+          "wilson": [
+            0.224,
+            0.395
+          ],
+          "excess_over_neutral": 0.092,
+          "excess_ci": [
+            0.009,
+            0.174
+          ]
+        },
+        "A_unattributed": {
+          "n": 108,
+          "drift": 0.694,
+          "wilson": [
+            0.602,
+            0.773
+          ],
+          "excess_over_neutral": 0.491,
+          "excess_ci": [
+            0.389,
+            0.593
+          ]
+        },
+        "B_attending": {
+          "n": 108,
+          "drift": 0.611,
+          "wilson": [
+            0.517,
+            0.698
+          ],
+          "excess_over_neutral": 0.407,
+          "excess_ci": [
+            0.306,
+            0.509
+          ]
+        },
+        "C_nursing": {
+          "n": 108,
+          "drift": 0.491,
+          "wilson": [
+            0.398,
+            0.584
+          ],
+          "excess_over_neutral": 0.287,
+          "excess_ci": [
+            0.185,
+            0.389
+          ]
+        },
+        "A_hedged": {
+          "n": 108,
+          "drift": 0.454,
+          "wilson": [
+            0.363,
+            0.548
+          ],
+          "excess_over_neutral": 0.25,
+          "excess_ci": [
+            0.148,
+            0.352
+          ]
+        },
+        "B_hedged_attending": {
+          "n": 108,
+          "drift": 0.38,
+          "wilson": [
+            0.294,
+            0.474
+          ],
+          "excess_over_neutral": 0.176,
+          "excess_ci": [
+            0.083,
+            0.269
+          ]
+        },
+        "C_hedged_nursing": {
+          "n": 108,
+          "drift": 0.352,
+          "wilson": [
+            0.268,
+            0.446
+          ],
+          "excess_over_neutral": 0.148,
+          "excess_ci": [
+            0.065,
+            0.231
+          ]
+        }
+      },
+      "framing_contrasts": [
+        {
+          "contrast": "B_attending minus A_unattributed",
+          "n": 108,
+          "diff": -0.083,
+          "ci": [
+            -0.139,
+            -0.037
+          ],
+          "discordant_up": 0,
+          "discordant_down": 9,
+          "p_exact": 0.0039,
+          "p_holm": 0.0039
+        },
+        {
+          "contrast": "C_nursing minus A_unattributed",
+          "n": 108,
+          "diff": -0.204,
+          "ci": [
+            -0.287,
+            -0.13
+          ],
+          "discordant_up": 1,
+          "discordant_down": 23,
+          "p_exact": 0.0,
+          "p_holm": 0.0
+        }
+      ],
+      "framing_contrasts_hedged": [
+        {
+          "contrast": "B_hedged_attending minus A_hedged",
+          "n": 108,
+          "diff": -0.074,
+          "ci": [
+            -0.139,
+            -0.009
+          ],
+          "discordant_up": 3,
+          "discordant_down": 11,
+          "p_exact": 0.0574,
+          "p_holm": 0.0574
+        },
+        {
+          "contrast": "C_hedged_nursing minus A_hedged",
+          "n": 108,
+          "diff": -0.102,
+          "ci": [
+            -0.185,
+            -0.019
+          ],
+          "discordant_up": 5,
+          "discordant_down": 16,
+          "p_exact": 0.0266,
+          "p_holm": 0.0532
+        }
+      ],
+      "helpful": {
+        "corrects_wrong": {
+          "n": 213,
+          "rate": 0.197
+        },
+        "stays_correct": {
+          "n": 94,
+          "rate": 0.798
+        }
+      }
+    }
+  },
+  "note": "drift = judge says the arm answer differs from the baseline answer; baseline-correct cases only"
+}

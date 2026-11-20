@@ -1,6 +1,6 @@
 # Evidence ledger
 
-Every number in paper/main.tex comes from a row here. Source for public rows: `v3_summary_judged__<model>__open-microsoft-phi-4.json` from the Colab run of 2026-11-13, transcribed from the printed output (copy the Drive files into results/ and extend make_ledger.py to read them to re-check). Source for MIMIC rows: `results/v3_summary_judged__claude-claude-sonnet-5__claude-claude-sonnet-5.json`. Derived values are computed in paper/make_ledger.py.
+Every number in paper/main.tex comes from a row here. Source for public rows: `results/v3_summary_judged__<model>__open-microsoft-phi-4.json`, copied from Drive on 2026-11-19; the Colab runs wrote them on 2026-11-13. Source for MIMIC rows: `results/v3_summary_judged__claude-claude-sonnet-5__claude-claude-sonnet-5.json`. Derived values are computed in paper/make_ledger.py.
 
 Prespecified in docs/prereg-v3.md: R, N, the five categories, framing arms A, B, C, contrasts B-A and C-A, the helpful note. Exploratory: hedged arms (Ah, Bh, Ch) and the adoption string match.
 
@@ -8,7 +8,7 @@ Prespecified in docs/prereg-v3.md: R, N, the five categories, framing arms A, B,
 
 | id | arm | n | drift (%) | excess over neutral, points [95% CI] | status |
 |---|---|---|---|---|---|
-| gemma4-0 | R | 114 | 2.6 |  | prespecified |
+| gemma4-0 | R | 114 | 2.6 | -20.2 [-28.1, -12.3] | prespecified |
 | gemma4-1 | N | 114 | 22.8 |  | prespecified |
 | gemma4-2 | VCS | 87 | 36.8 | +13.8 [+3.4, +24.1] | prespecified |
 | gemma4-3 | ISO | 108 | 37.0 | +14.8 [+6.5, +24.1] | prespecified |
@@ -18,9 +18,9 @@ Prespecified in docs/prereg-v3.md: R, N, the five categories, framing arms A, B,
 | gemma4-7 | A | 108 | 69.4 | +49.1 [+38.9, +59.3] | prespecified |
 | gemma4-8 | B | 108 | 61.1 | +40.7 [+30.6, +50.9] | prespecified |
 | gemma4-9 | C | 108 | 49.1 | +28.7 [+18.5, +38.9] | prespecified |
-| gemma4-10 | Ah | 108 | 45.4 |  | exploratory |
-| gemma4-11 | Bh | 108 | 38.0 |  | exploratory |
-| gemma4-12 | Ch | 108 | 35.2 |  | exploratory |
+| gemma4-10 | Ah | 108 | 45.4 | +25.0 [+14.8, +35.2] | exploratory |
+| gemma4-11 | Bh | 108 | 38.0 | +17.6 [+8.3, +26.9] | exploratory |
+| gemma4-12 | Ch | 108 | 35.2 | +14.8 [+6.5, +23.1] | exploratory |
 
 Derived: N minus R = 20.2 points; CI from the paired R-minus-N bootstrap with the sign flipped: [12.3, 28.1] (R excess -20.2 [-28.1, -12.3]).
 
@@ -38,26 +38,26 @@ Adoption (exploratory string match; the answer contains the inserted wrong diagn
 
 | id | arm | n | drift (%) | excess over neutral, points [95% CI] | status |
 |---|---|---|---|---|---|
-| llama31-0 | R | 83 | 4.8 |  | prespecified |
+| llama31-0 | R | 83 | 4.8 | -21.7 [-32.5, -12.0] | prespecified |
 | llama31-1 | N | 83 | 26.5 |  | prespecified |
-| llama31-2 | VCS | 65 | 27.7 | +7.7 [-1, +17] | prespecified |
-| llama31-3 | ISO | 78 | 59.0 | +34.6 [+20, +47] | prespecified |
-| llama31-4 | PLV | 66 | 27.3 | +4.5 [-4, +14] | prespecified |
-| llama31-5 | MMS | 60 | 31.7 | +3.3 [-7, +13] | prespecified |
-| llama31-6 | SNHR | 79 | 30.4 | +5.1 [-4, +14] | prespecified |
-| llama31-7 | A | 77 | 83.1 | +57.1 [+44, +69] | prespecified |
-| llama31-8 | B | 77 | 81.8 | +55.8 [+43, +68] | prespecified |
-| llama31-9 | C | 77 | 80.5 | +54.5 [+42, +66] | prespecified |
-| llama31-10 | Ah | 77 | 64.9 |  | exploratory |
-| llama31-11 | Bh | 77 | 66.2 |  | exploratory |
-| llama31-12 | Ch | 77 | 61.0 |  | exploratory |
+| llama31-2 | VCS | 65 | 27.7 | +7.7 [-1.5, +16.9] | prespecified |
+| llama31-3 | ISO | 78 | 59.0 | +34.6 [+20.5, +47.4] | prespecified |
+| llama31-4 | PLV | 66 | 27.3 | +4.5 [-4.5, +13.6] | prespecified |
+| llama31-5 | MMS | 60 | 31.7 | +3.3 [-6.7, +13.3] | prespecified |
+| llama31-6 | SNHR | 79 | 30.4 | +5.1 [-3.8, +13.9] | prespecified |
+| llama31-7 | A | 77 | 83.1 | +57.1 [+44.2, +68.8] | prespecified |
+| llama31-8 | B | 77 | 81.8 | +55.8 [+42.9, +67.5] | prespecified |
+| llama31-9 | C | 77 | 80.5 | +54.5 [+41.6, +66.2] | prespecified |
+| llama31-10 | Ah | 77 | 64.9 | +39.0 [+26.0, +51.9] | exploratory |
+| llama31-11 | Bh | 77 | 66.2 | +40.3 [+27.3, +51.9] | exploratory |
+| llama31-12 | Ch | 77 | 61.0 | +35.1 [+22.1, +48.1] | exploratory |
 
-Derived: N minus R = 21.7 points; CI from the paired R-minus-N bootstrap with the sign flipped: [12, 33] (R excess -21.7 [-33, -12]).
+Derived: N minus R = 21.7 points; CI from the paired R-minus-N bootstrap with the sign flipped: [12.0, 32.5] (R excess -21.7 [-32.5, -12.0]).
 
 | contrast | diff (points) | 95% CI | discordant up/down | exact p | Holm p |
 |---|---|---|---|---|---|
-| B-A | -1.3 | [-5.2, +2.6] | 1/2 | n/a | 1.0 |
-| C-A | -2.6 | [-7.8, +2.6] | 1/3 | n/a | 1.0 |
+| B-A | -1.3 | [-5.2, +2.6] | 1/2 | 1.0 | 1.0 |
+| C-A | -2.6 | [-7.8, +2.6] | 1/3 | 0.625 | 1.0 |
 | Bh-Ah | +1.3 | [-2.6, +6.5] | 2/1 | 1.0 | 1.0 |
 | Ch-Ah | -3.9 | [-9.1, +0.0] | 0/3 | 0.25 | 0.5 |
 

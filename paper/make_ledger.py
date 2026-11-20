@@ -34,6 +34,27 @@ public = {
                "Bh-Ah": (.013, -.026, .065, 2, 1, 1.0, 1.0), "Ch-Ah": (-.039, -.091, .0, 0, 3, .25, .5)},
         helpful=dict(wrong=(242, .194), right=(65, .785)), adopt=(66, 62, 61, 77)),
 }
+
+# Replace the transcription with the real files (copied from Drive on 2026-11-19; written by the Colab runs of 2026-11-13).
+_AMAP = {"A": "A_unattributed", "B": "B_attending", "C": "C_nursing", "Ah": "A_hedged", "Bh": "B_hedged_attending", "Ch": "C_hedged_nursing"}
+_CMAP = {"B-A": "B_attending minus A_unattributed", "C-A": "C_nursing minus A_unattributed",
+         "Bh-Ah": "B_hedged_attending minus A_hedged", "Ch-Ah": "C_hedged_nursing minus A_hedged"}
+_FILES = {"gemma4": "hf-google-gemma-4-12B-it", "llama31": "hf-meta-llama-Llama-3-1-8B-Instruct"}
+for _k, _m in _FILES.items():
+    _f = json.load(open(R / f"v3_summary_judged__{_m}__open-microsoft-phi-4.json"))["by_source"]["pubcase"]
+    _d = public[_k]
+    _d["n_cases"], _d["base_ok"], _d["acc"] = _f["n_cases"], _f["baseline_correct"], _f["baseline_accuracy"]
+    for _a in list(_d["arms"]):
+        _x = _f["arms"][_AMAP.get(_a, _a)]
+        _ex = (_x["excess_over_neutral"], *_x["excess_ci"]) if "excess_over_neutral" in _x else None
+        _d["arms"][_a] = (_x["n"], _x["drift"], _ex)
+    _r = _f["arms"]["R"]
+    _d["r_excess"] = (_r["excess_over_neutral"], *_r["excess_ci"])
+    _cs = {c["contrast"]: c for c in _f["framing_contrasts"] + _f["framing_contrasts_hedged"]}
+    _d["contr"] = {k: (_cs[v]["diff"], *_cs[v]["ci"], _cs[v]["discordant_up"], _cs[v]["discordant_down"],
+                       _cs[v]["p_exact"], _cs[v]["p_holm"]) for k, v in _CMAP.items()}
+    _d["helpful"] = dict(wrong=(_f["helpful"]["corrects_wrong"]["n"], _f["helpful"]["corrects_wrong"]["rate"]),
+                         right=(_f["helpful"]["stays_correct"]["n"], _f["helpful"]["stays_correct"]["rate"]))
 notes_pass = {"X": (400, .963, 1.08), "ISO": (385, .943, 1.16), "SNHR": (385, .987, 1.09), "PLV": (385, .896, 1.25),
               "VCS": (385, .849, 1.54), "MMS": (385, .842, 1.66), "H": (400, .767, 1.49)}
 
@@ -44,15 +65,14 @@ def pct(x):
 
 out = ["# Evidence ledger", "",
        "Every number in paper/main.tex comes from a row here. Source for public rows: "
-       "`v3_summary_judged__<model>__open-microsoft-phi-4.json` from the Colab run of 2026-11-13, transcribed from the "
-       "printed output (copy the Drive files into results/ and extend make_ledger.py to read them to re-check). "
+       "`results/v3_summary_judged__<model>__open-microsoft-phi-4.json`, copied from Drive on 2026-11-19; the Colab runs wrote them on 2026-11-13. "
        "Source for MIMIC rows: `results/v3_summary_judged__claude-claude-sonnet-5__claude-claude-sonnet-5.json`. "
        "Derived values are computed in paper/make_ledger.py.", "",
        "Prespecified in docs/prereg-v3.md: R, N, the five categories, framing arms A, B, C, contrasts B-A and C-A, "
        "the helpful note. Exploratory: hedged arms (Ah, Bh, Ch) and the adoption string match.", ""]
 for key, name in (("gemma4", "Gemma 4 12B"), ("llama31", "Llama 3.1 8B")):
     d = public[key]
-    dg = 0 if key == "llama31" else 1  # the Llama summary was printed with two-decimal intervals, so report whole points
+    dg = 1
     out += [f"## {name}, public cases (n_cases {d['n_cases']}, baseline-correct {d['base_ok']}, accuracy {pct(d['acc'])}%)", ""]
     out += ["| id | arm | n | drift (%) | excess over neutral, points [95% CI] | status |", "|---|---|---|---|---|---|"]
     for i, (a, (n, dr, ex)) in enumerate(d["arms"].items()):
